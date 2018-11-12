@@ -14,6 +14,9 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "monkey-swift",
+            dependencies: ["Token"]),
+        .target(
+            name: "Token",
             dependencies: []),
         .testTarget(
             name: "monkey-swiftTests",
