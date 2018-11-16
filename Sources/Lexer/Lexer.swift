@@ -63,6 +63,8 @@ public struct Lexer {
             return TokenType(identifier: readIdentifier())
         case let character? where isDigit(character):
             return TokenType(number: readNumber())
+        case nil:
+            return .eof
         default:
             return .illegal
         }
@@ -75,6 +77,8 @@ public struct Lexer {
         if readPosition < input.count {
             let index = input.index(input.startIndex, offsetBy: readPosition)
             character = input[index]
+        } else {
+            character = nil
         }
         currentPosition = readPosition
         readPosition += 1
