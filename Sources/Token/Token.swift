@@ -36,7 +36,7 @@ public enum TokenType: Equatable {
     case unknown, illegal, eof
 
     // Identifiers + literals
-    case identifier(name: String), int(value: Int)
+    case identifier(type: NameType), int(value: Int)
     
     // Operators
     case assign, plus, minus, bang, asterisk, slash, comma, semicolon, lessThan, greaterThan, equal, notEqual
@@ -46,11 +46,27 @@ public enum TokenType: Equatable {
     // Keywords
     case function, `let`, `true`, `false`, `if`, `else`, `return`
     
+    // TODO: it's ugly 
+    public enum NameType: Equatable {
+        case notSet
+        case value(name: String)
+        
+        public static func == (lhs: NameType, rhs: NameType) -> Bool {
+            switch (lhs, rhs) {
+            case (.value(let lhsName), .value(let rhsName)):
+                return lhsName == rhsName
+            default:
+                return true
+            }
+        }
+    }
+    
     public var literal: String {
         switch self {
         case .illegal: return "Illegal"
         case .eof: return "EOF"
-        case .identifier(let name): return name
+        case .identifier(.value(let name)): return name
+        case .identifier: return ""
         case .int(let value): return "\(value)"
         case .assign: return String(TokenSymbol.equal.rawValue)
         case .plus: return String(TokenSymbol.plus.rawValue)
@@ -111,7 +127,7 @@ public enum TokenType: Equatable {
     
     public init(identifier: String) {
         guard let keyword = TokenKeyword(rawValue: identifier) else {
-            self = .identifier(name: identifier)
+            self = .identifier(type: .value(name: identifier))
             return
         }
         

@@ -34,12 +34,12 @@ final class LexerTests: XCTestCase {
         """
         
         let expectedTokenTypes: [TokenType] = [
-            .let, .identifier(name: "five"), .assign, .int(value: 5), .semicolon,
-            .let, .identifier(name: "ten"), .assign, .int(value: 10), .semicolon,
-            .let, .identifier(name: "add"), .assign, .function, .leftParen, .identifier(name: "x"), .comma, .identifier(name: "y"), .rightParen, .leftBrace,
-            .identifier(name: "x"), .plus, .identifier(name: "y"), .semicolon,
+            .let, .identifier(type: .value(name: "five")), .assign, .int(value: 5), .semicolon,
+            .let, .identifier(type: .value(name: "ten")), .assign, .int(value: 10), .semicolon,
+            .let, .identifier(type: .value(name: "add")), .assign, .function, .leftParen, .identifier(type: .value(name: "x")), .comma, .identifier(type: .value(name: "y")), .rightParen, .leftBrace,
+            .identifier(type: .value(name: "x")), .plus, .identifier(type: .value(name: "y")), .semicolon,
             .rightBrace, .semicolon,
-            .let, .identifier(name: "result"), .assign, .identifier(name: "add"), .leftParen, .identifier(name: "five"), .comma, .identifier(name: "ten"), .rightParen, .semicolon,
+            .let, .identifier(type: .value(name: "result")), .assign, .identifier(type: .value(name: "add")), .leftParen, .identifier(type: .value(name: "five")), .comma, .identifier(type: .value(name: "ten")), .rightParen, .semicolon,
             .bang, .minus, .slash, .asterisk, .int(value: 5), .semicolon,
             .int(value: 5), .lessThan, .int(value: 10), .greaterThan, .int(value: 5), .semicolon
         ]
@@ -47,7 +47,7 @@ final class LexerTests: XCTestCase {
         var lexer = Lexer(input: input)
         expectedTokenTypes.forEach { expectedTokenType in
             let tokenType = lexer.nextTokenType()
-
+            
             if tokenType != expectedTokenType {
                 XCTFail(String(format: "tokenType wrong. expected=%@, got=%@",
                                expectedTokenType.literal, tokenType.literal) )
