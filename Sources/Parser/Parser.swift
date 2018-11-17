@@ -58,6 +58,7 @@ public struct Parser {
     mutating func parseStatement() throws -> Statement? {
         switch currentTokenType {
         case .let: return try parseLetStatement()
+        case .return: return parseReturnStatement()
         default: return nil
         }
     }
@@ -81,7 +82,19 @@ public struct Parser {
             setNextToken()
         }
         
-        return LetStatement(tokenType: letTokenType, name: name)
+        return .init(tokenType: letTokenType, name: name)
+    }
+    
+    mutating func parseReturnStatement() -> ReturnStatement {
+        let returnTokenType = currentTokenType
+        
+        setNextToken()
+        
+        while !isCurrentToken(equalTo: .semicolon) {
+            setNextToken()
+        }
+        
+        return .init(tokenType: returnTokenType)
     }
     
     mutating func setNextToken() {

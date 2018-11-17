@@ -40,7 +40,6 @@ extension Program: Node {
 public struct LetStatement {
     public let tokenType: TokenType
     public let name: Identifier
-//    public let value: Expression
     
     public init(tokenType: TokenType, name: Identifier) {
         self.tokenType = tokenType
@@ -75,5 +74,18 @@ extension Identifier: Expression {
     }
 }
 
-public struct Ast {
+public struct ReturnStatement {
+    public let tokenType: TokenType
+    
+    public init(tokenType: TokenType) {
+        self.tokenType = tokenType
+    }
+}
+
+extension ReturnStatement: Statement {
+    public func statementNode() {}
+    
+    public var tokenLiteral: String {
+        return tokenType.literal
+    }
 }
