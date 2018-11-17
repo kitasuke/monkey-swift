@@ -5,12 +5,23 @@
 //  Created by Yusuke Kita on 11/15/18.
 //
 
+import Foundation
 import Token
 import Lexer
 import Ast
 
-enum TokenParseError: Error {
-    case peekTokenNotMatch
+public enum ParserError: Error {
+    case noValidStatements
+    case peekTokenNotMatch(expected: TokenType, actual: TokenType)
+
+    public var message: String {
+        switch self {
+        case .noValidStatements:
+            return "found no valid statements"
+        case .peekTokenNotMatch(let expected, let actual):
+            return String(format: "expected next token to be %s. got=%s", expected.literal, actual.literal)
+        }
+    }
 }
 
 public struct Parser {
@@ -18,45 +29,53 @@ public struct Parser {
     var currentTokenType: TokenType = .unknown
     var peekTokenType: TokenType = .unknown
     
+    
     public init(lexer: Lexer) {
         self.lexer = lexer
         
         setNextToken()
     }
     
-    public mutating func parseProgram() -> Program? {
+    public mutating func parseProgram() throws -> Program {
         var statements: [Statement] = []
         
         while currentTokenType != .eof {
-            if let statement = parseStatement() {
-                statements.append(statement)
-            }
+            do {
+                if let statement = try parseStatement() {
+                    statements.append(statement)
+                }
+            } catch let error { throw error }
+
             setNextToken()
         }
         
         guard !statements.isEmpty else {
-            return nil
+            throw ParserError.noValidStatements
         }
         return Program(statements: statements)
     }
     
-    mutating func parseStatement() -> Statement? {
+    mutating func parseStatement() throws -> Statement? {
         switch currentTokenType {
-        case .let: return parseLetStatement()
+        case .let: return try parseLetStatement()
         default: return nil
         }
     }
     
-    mutating func parseLetStatement() -> LetStatement? {
+    mutating func parseLetStatement() throws -> LetStatement {
         let letTokenType = currentTokenType
         
         do { try setNextToken(expects: .identifier(type: .notSet))
-        } catch { return nil }
+        } catch let error {
+            throw error
+        }
         
         let name = Identifier(tokenType: currentTokenType)
         
         do { try setNextToken(expects: .assign)
-        } catch { return nil }
+        }  catch let error {
+            throw error
+        }
         
         while !isCurrentToken(equalTo: .semicolon) {
             setNextToken()
@@ -80,7 +99,7 @@ public struct Parser {
     
     mutating func setNextToken(expects tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
-            throw TokenParseError.peekTokenNotMatch
+            throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekTokenType)
         }
         
         setNextToken()

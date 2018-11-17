@@ -21,10 +21,16 @@ final class ParserTests: XCTestCase {
         
         let lexer = Lexer(input: input)
         var parser = Parser(lexer: lexer)
-        guard let program = parser.parseProgram() else {
-            XCTFail("parseProgram() returned nil")
-            return
+        
+        let program: Program
+        do {
+            program = try parser.parseProgram()
+        } catch let error as ParserError {
+            XCTFail(error.message); return
+        } catch {
+            XCTFail("parseProgram failed"); return
         }
+        
         let statementsCount = program.statements.count
         let expectedCount = 3
         guard statementsCount == expectedCount else {
