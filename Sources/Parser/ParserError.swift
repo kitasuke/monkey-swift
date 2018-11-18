@@ -18,7 +18,7 @@ public enum ParserError: Error {
         case .noValidStatements:
             return "found no valid statements"
         case .peekTokenNotMatch(let expected, let actual):
-            return String(format: "expected next token to be %s. got=%s", expected.literal, actual.literal)
+            return "expected next token to be \(expected). got=\(actual)"
         }
     }
 }

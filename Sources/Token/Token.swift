@@ -9,7 +9,7 @@ public enum TokenType: Equatable {
     case unknown, illegal, eof
 
     // Identifiers + literals
-    case identifier(type: NameType), int(value: Int)
+    case identifier, int
     
     // Operators
     case assign, plus, minus, bang, asterisk, slash, comma, semicolon, lessThan, greaterThan, equal, notEqual
@@ -18,55 +18,6 @@ public enum TokenType: Equatable {
     
     // Keywords
     case function, `let`, `true`, `false`, `if`, `else`, `return`
-    
-    // TODO: it's ugly 
-    public enum NameType: Equatable {
-        case notSet
-        case value(name: String)
-        
-        public static func == (lhs: NameType, rhs: NameType) -> Bool {
-            switch (lhs, rhs) {
-            case (.value(let lhsName), .value(let rhsName)):
-                return lhsName == rhsName
-            default:
-                return true
-            }
-        }
-    }
-    
-    public var literal: String {
-        switch self {
-        case .illegal: return "Illegal"
-        case .eof: return "EOF"
-        case .identifier(.value(let name)): return name
-        case .identifier: return ""
-        case .int(let value): return "\(value)"
-        case .assign: return String(TokenSymbol.equal.rawValue)
-        case .plus: return String(TokenSymbol.plus.rawValue)
-        case .minus: return String(TokenSymbol.minus.rawValue)
-        case .bang: return String(TokenSymbol.bang.rawValue)
-        case .asterisk: return String(TokenSymbol.asterisk.rawValue)
-        case .slash: return String(TokenSymbol.slash.rawValue)
-        case .comma: return String(TokenSymbol.comma.rawValue)
-        case .semicolon: return String(TokenSymbol.semicolon.rawValue)
-        case .lessThan: return String(TokenSymbol.lessThan.rawValue)
-        case .greaterThan: return String(TokenSymbol.greaterThan.rawValue)
-        case .equal: return TokenType.equal.literal + TokenType.equal.literal
-        case .notEqual: return TokenType.bang.literal + TokenType.equal.literal
-        case .leftParen: return String(TokenSymbol.leftParen.rawValue)
-        case .rightParen: return String(TokenSymbol.rightParen.rawValue)
-        case .leftBrace: return String(TokenSymbol.leftBrace.rawValue)
-        case .rightBrace: return String(TokenSymbol.rightBrace.rawValue)
-        case .function: return TokenKeyword.fn.rawValue
-        case .let: return TokenKeyword.let.rawValue
-        case .true: return TokenKeyword.true.rawValue
-        case .false: return TokenKeyword.false.rawValue
-        case .if: return TokenKeyword.if.rawValue
-        case .else: return TokenKeyword.else.rawValue
-        case .return: return TokenKeyword.return.rawValue
-        case .unknown: return ""
-        }
-    }
     
     public init(symbol: Character) {
         guard let symbol = TokenSymbol(rawValue: symbol) else {
@@ -95,12 +46,12 @@ public enum TokenType: Equatable {
     public init(number: String) {
         let value = Int(number)
         assert(value != nil)
-        self = .int(value: value ?? 0)
+        self = .int
     }
     
     public init(identifier: String) {
         guard let keyword = TokenKeyword(rawValue: identifier) else {
-            self = .identifier(type: .value(name: identifier))
+            self = .identifier
             return
         }
         
@@ -113,5 +64,63 @@ public enum TokenType: Equatable {
         case .else: self = .else
         case .return: self = .return
         }
+    }
+}
+
+public struct Token: Equatable {
+    public let type: TokenType
+    public let literal: String
+    
+    public init(type: TokenType) {
+        self.type = type
+        
+        let literal: String
+        switch type {
+        case .illegal: literal = "Illegal"
+        case .eof: literal = "EOF"
+        case .identifier, .int:
+            assertionFailure("not supported")
+            literal = ""
+        case .assign: literal = String(TokenSymbol.equal.rawValue)
+        case .plus: literal = String(TokenSymbol.plus.rawValue)
+        case .minus: literal = String(TokenSymbol.minus.rawValue)
+        case .bang: literal = String(TokenSymbol.bang.rawValue)
+        case .asterisk: literal = String(TokenSymbol.asterisk.rawValue)
+        case .slash: literal = String(TokenSymbol.slash.rawValue)
+        case .comma: literal = String(TokenSymbol.comma.rawValue)
+        case .semicolon: literal = String(TokenSymbol.semicolon.rawValue)
+        case .lessThan: literal = String(TokenSymbol.lessThan.rawValue)
+        case .greaterThan: literal = String(TokenSymbol.greaterThan.rawValue)
+        case .equal: literal = String(TokenSymbol.equal.rawValue) + String(TokenSymbol.equal.rawValue)
+        case .notEqual: literal = String(TokenSymbol.bang.rawValue) + String(TokenSymbol.equal.rawValue)
+        case .leftParen: literal = String(TokenSymbol.leftParen.rawValue)
+        case .rightParen: literal = String(TokenSymbol.rightParen.rawValue)
+        case .leftBrace: literal = String(TokenSymbol.leftBrace.rawValue)
+        case .rightBrace: literal = String(TokenSymbol.rightBrace.rawValue)
+        case .function: literal = TokenKeyword.fn.rawValue
+        case .let: literal = TokenKeyword.let.rawValue
+        case .true: literal = TokenKeyword.true.rawValue
+        case .false: literal = TokenKeyword.false.rawValue
+        case .if: literal = TokenKeyword.if.rawValue
+        case .else: literal = TokenKeyword.else.rawValue
+        case .return: literal = TokenKeyword.return.rawValue
+        case .unknown: literal = ""
+        }
+        self.literal = literal
+    }
+    
+    init(type: TokenType, literal: String) {
+        self.type = type
+        self.literal = literal
+    }
+    
+    public static func makeIdentifier(identifier: String) -> Token {
+        let type = TokenType(identifier: identifier)
+        return Token(type: type, literal: identifier)
+    }
+    
+    public static func makeNumber(number: String) -> Token {
+        let type = TokenType(number: number)
+        return Token(type: type, literal: number)
     }
 }

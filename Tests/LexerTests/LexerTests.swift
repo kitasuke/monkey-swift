@@ -22,35 +22,23 @@ final class LexerTests: XCTestCase {
             let result = add(five, ten);
             !-/*5;
             5 < 10 > 5;
-
-            if (5 < 10) {
-                return true;
-            } else {
-                return false;
-            }
-
-            10 == 10;
-            10 != 9;
         """
         
-        let expectedTokenTypes: [TokenType] = [
-            .let, .identifier(type: .value(name: "five")), .assign, .int(value: 5), .semicolon,
-            .let, .identifier(type: .value(name: "ten")), .assign, .int(value: 10), .semicolon,
-            .let, .identifier(type: .value(name: "add")), .assign, .function, .leftParen, .identifier(type: .value(name: "x")), .comma, .identifier(type: .value(name: "y")), .rightParen, .leftBrace,
-            .identifier(type: .value(name: "x")), .plus, .identifier(type: .value(name: "y")), .semicolon,
-            .rightBrace, .semicolon,
-            .let, .identifier(type: .value(name: "result")), .assign, .identifier(type: .value(name: "add")), .leftParen, .identifier(type: .value(name: "five")), .comma, .identifier(type: .value(name: "ten")), .rightParen, .semicolon,
-            .bang, .minus, .slash, .asterisk, .int(value: 5), .semicolon,
-            .int(value: 5), .lessThan, .int(value: 10), .greaterThan, .int(value: 5), .semicolon
+        let expectedTokens: [Token] = [
+            .init(type: .let), .makeIdentifier(identifier: "five"), .init(type: .assign), .makeNumber(number: "5"), .init(type: .semicolon),
+            .init(type: .let), .makeIdentifier(identifier: "ten"), .init(type: .assign), .makeNumber(number: "10"), .init(type: .semicolon),
+            .init(type: .let), .makeIdentifier(identifier: "add"), .init(type: .assign), .init(type: .function), .init(type: .leftParen), .makeIdentifier(identifier: "x"), .init(type: .comma), .makeIdentifier(identifier: "y"), .init(type: .rightParen), .init(type: .leftBrace), .makeIdentifier(identifier: "x"), .init(type: .plus), .makeIdentifier(identifier: "y"), .init(type: .semicolon), .init(type: .rightBrace), .init(type: .semicolon),
+            .init(type: .let), .makeIdentifier(identifier: "result"), .init(type: .assign), .makeIdentifier(identifier: "add"), .init(type: .leftParen), .makeIdentifier(identifier: "five"), .init(type: .comma), .makeIdentifier(identifier: "ten"), .init(type: .rightParen), .init(type: .semicolon),
+            .init(type: .bang), .init(type: .minus), .init(type: .slash), .init(type: .asterisk), .makeNumber(number: "5"), .init(type: .semicolon),
+            .makeNumber(number: "5"), .init(type: .lessThan), .makeNumber(number: "10"), .init(type: .greaterThan), .makeNumber(number: "5"), .init(type: .semicolon)
         ]
-        
+
         var lexer = Lexer(input: input)
-        expectedTokenTypes.forEach { expectedTokenType in
-            let tokenType = lexer.nextTokenType()
-            
-            if tokenType != expectedTokenType {
-                XCTFail(String(format: "tokenType wrong. expected=%@, got=%@",
-                               expectedTokenType.literal, tokenType.literal) )
+        expectedTokens.forEach { expectedToken in
+            let token = lexer.nextToken()
+
+            if token != expectedToken {
+                XCTFail("tokenType wrong. expected=\(expectedToken), got=\(token)")
             }
         }
     }

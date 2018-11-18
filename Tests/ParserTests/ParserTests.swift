@@ -34,7 +34,7 @@ final class ParserTests: XCTestCase {
         let statementsCount = program.statements.count
         let expectedCount = 3
         guard statementsCount == expectedCount else {
-            XCTFail(String(format: "program.statements does not contain %d statements. got=%d", expectedCount, statementsCount))
+            XCTFail("program.statements does not contain \(expectedCount) statements. got=\(statementsCount)")
             return
         }
         
@@ -74,7 +74,7 @@ final class ParserTests: XCTestCase {
         let statementsCount = program.statements.count
         let expectedCount = 3
         guard statementsCount == expectedCount else {
-            XCTFail(String(format: "program.statements does not contain %d statements. got=%d", expectedCount, statementsCount))
+            XCTFail("program.statements does not contain \(expectedCount) statements. got=\(statementsCount)")
             return
         }
         
@@ -84,16 +84,16 @@ final class ParserTests: XCTestCase {
                 return
             }
             
-            guard returnStatement.tokenType == .return else {
-                XCTFail("tokenType not \(TokenType.return). got=\(returnStatement.tokenType)")
+            guard returnStatement.token.type == .return else {
+                XCTFail("tokenType not \(TokenType.return). got=\(returnStatement.token.type)")
                 return
             }
         }
     }
     
     private func testLetStatement(_ statement: Statement, name: String) -> Bool {
-        guard statement.tokenLiteral == TokenType.let.literal else {
-            XCTFail(String(format: "tokenLiteral not %s. got=%s", TokenType.let.literal, statement.tokenLiteral))
+        guard statement.tokenLiteral == Token(type: .let).literal else {
+            XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")
             return false
         }
         
@@ -103,12 +103,12 @@ final class ParserTests: XCTestCase {
         }
         
         guard letStatement.name.value == name else {
-            XCTFail(String(format: "value not %s. got=%s", letStatement.name.value, name))
+            XCTFail("value not \(letStatement.name.value). got=\(name)")
             return false
         }
         
         guard letStatement.name.tokenLiteral == name else {
-            XCTFail(String(format: "tokenLiteral not %s. got=%s", letStatement.name.tokenLiteral, name))
+            XCTFail("tokenLiteral not \(letStatement.name.tokenLiteral). got=\(name)")
             return false
         }
         

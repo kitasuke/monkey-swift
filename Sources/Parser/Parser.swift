@@ -12,8 +12,8 @@ import Ast
 
 public struct Parser {
     var lexer: Lexer
-    var currentTokenType: TokenType = .unknown
-    var peekTokenType: TokenType = .unknown
+    var currentToken = Token(type: .unknown)
+    var peekToken = Token(type: .unknown)
     
     
     public init(lexer: Lexer) {
@@ -25,7 +25,7 @@ public struct Parser {
     public mutating func parseProgram() throws -> Program {
         var statements: [Statement] = []
         
-        while currentTokenType != .eof {
+        while currentToken.type != .eof {
             do {
                 if let statement = try parseStatement() {
                     statements.append(statement)
@@ -42,7 +42,7 @@ public struct Parser {
     }
     
     mutating func parseStatement() throws -> Statement? {
-        switch currentTokenType {
+        switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return parseReturnStatement()
         default: return nil
@@ -50,14 +50,14 @@ public struct Parser {
     }
     
     mutating func parseLetStatement() throws -> LetStatement {
-        let letTokenType = currentTokenType
+        let letToken = currentToken
         
-        do { try setNextToken(expects: .identifier(type: .notSet))
+        do { try setNextToken(expects: .identifier)
         } catch let error {
             throw error
         }
         
-        let name = Identifier(tokenType: currentTokenType)
+        let name = Identifier(token: currentToken)
         
         do { try setNextToken(expects: .assign)
         }  catch let error {
@@ -68,11 +68,11 @@ public struct Parser {
             setNextToken()
         }
         
-        return .init(tokenType: letTokenType, name: name)
+        return .init(token: letToken, name: name)
     }
     
     mutating func parseReturnStatement() -> ReturnStatement {
-        let returnTokenType = currentTokenType
+        let returnToken = currentToken
         
         setNextToken()
         
@@ -80,25 +80,25 @@ public struct Parser {
             setNextToken()
         }
         
-        return .init(tokenType: returnTokenType)
+        return .init(token: returnToken)
     }
     
     mutating func setNextToken() {
-        currentTokenType = peekTokenType
-        peekTokenType = lexer.nextTokenType()
+        currentToken = peekToken
+        peekToken = lexer.nextToken()
     }
     
     func isCurrentToken(equalTo tokenType: TokenType) -> Bool {
-        return currentTokenType == tokenType
+        return currentToken.type == tokenType
     }
     
     func isPeekToken(equalTo tokenType: TokenType) -> Bool {
-        return peekTokenType == tokenType
+        return peekToken.type == tokenType
     }
     
     mutating func setNextToken(expects tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
-            throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekTokenType)
+            throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekToken.type)
         }
         
         setNextToken()

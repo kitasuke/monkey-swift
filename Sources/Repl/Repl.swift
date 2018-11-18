@@ -14,11 +14,11 @@ public struct Repl {
     
     public static func start(with input: String) {
         var lexer = Lexer(input: input)
-        var tokenType = lexer.nextTokenType()
+        var token = lexer.nextToken()
 
-        while tokenType != .eof {
-            print(tokenType.literal)
-            tokenType = lexer.nextTokenType()
+        while token.type != .eof {
+            print(token.literal)
+            token = lexer.nextToken()
         }
     }
 }

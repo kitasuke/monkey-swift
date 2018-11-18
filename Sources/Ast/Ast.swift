@@ -38,11 +38,11 @@ extension Program: Node {
 }
 
 public struct LetStatement {
-    public let tokenType: TokenType
+    public let token: Token
     public let name: Identifier
     
-    public init(tokenType: TokenType, name: Identifier) {
-        self.tokenType = tokenType
+    public init(token: Token, name: Identifier) {
+        self.token = token
         self.name = name
     }
 }
@@ -51,18 +51,18 @@ extension LetStatement: Statement {
     public func statementNode() {}
 
     public var tokenLiteral: String {
-        return tokenType.literal
+        return token.literal
     }
 }
 
 public struct Identifier {
-    public let tokenType: TokenType
+    public let token: Token
     public var value: String {
-        return tokenType.literal
+        return token.literal
     }
     
-    public init(tokenType: TokenType) {
-        self.tokenType = tokenType
+    public init(token: Token) {
+        self.token = token
     }
 }
 
@@ -70,15 +70,15 @@ extension Identifier: Expression {
     public func expressionNode() {}
     
     public var tokenLiteral: String {
-        return tokenType.literal
+        return token.literal
     }
 }
 
 public struct ReturnStatement {
-    public let tokenType: TokenType
+    public let token: Token
     
-    public init(tokenType: TokenType) {
-        self.tokenType = tokenType
+    public init(token: Token) {
+        self.token = token
     }
 }
 
@@ -86,6 +86,6 @@ extension ReturnStatement: Statement {
     public func statementNode() {}
     
     public var tokenLiteral: String {
-        return tokenType.literal
+        return token.literal
     }
 }

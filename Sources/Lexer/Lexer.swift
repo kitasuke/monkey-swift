@@ -21,7 +21,7 @@ public struct Lexer {
         setNextCharacter()
     }
     
-    public mutating func nextTokenType() -> TokenType {
+    public mutating func nextToken() -> Token {
         let tokenType: TokenType
         
         skipWhitespace()
@@ -60,17 +60,17 @@ public struct Lexer {
         case TokenSymbol.rightBrace.rawValue:
             tokenType = .rightBrace
         case let character? where isLetter(character):
-            return TokenType(identifier: readIdentifier())
+            return .makeIdentifier(identifier: readIdentifier())
         case let character? where isDigit(character):
-            return TokenType(number: readNumber())
+            return .makeNumber(number: readNumber())
         case nil:
-            return .eof
+            return .init(type: .eof)
         default:
-            return .illegal
+            return .init(type: .illegal)
         }
         
         setNextCharacter()
-        return tokenType
+        return .init(type: tokenType)
     }
     
     private mutating func setNextCharacter() {
