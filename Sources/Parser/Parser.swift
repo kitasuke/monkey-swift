@@ -10,20 +10,6 @@ import Token
 import Lexer
 import Ast
 
-public enum ParserError: Error {
-    case noValidStatements
-    case peekTokenNotMatch(expected: TokenType, actual: TokenType)
-
-    public var message: String {
-        switch self {
-        case .noValidStatements:
-            return "found no valid statements"
-        case .peekTokenNotMatch(let expected, let actual):
-            return String(format: "expected next token to be %s. got=%s", expected.literal, actual.literal)
-        }
-    }
-}
-
 public struct Parser {
     var lexer: Lexer
     var currentTokenType: TokenType = .unknown

@@ -70,7 +70,7 @@ final class ParserTests: XCTestCase {
         } catch {
             XCTFail("parseProgram failed"); return
         }
-        s
+        
         let statementsCount = program.statements.count
         let expectedCount = 3
         guard statementsCount == expectedCount else {
