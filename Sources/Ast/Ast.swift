@@ -11,13 +11,9 @@ public protocol Node {
     var tokenLiteral: String { get }
 }
 
-public protocol Statement: Node {
-    func statementNode()
-}
+public protocol Statement: Node {}
 
-public protocol Expression: Node {
-    func expressionNode()
-}
+public protocol Expression: Node {}
 
 public struct Program {
     public let statements: [Statement]
@@ -48,8 +44,6 @@ public struct LetStatement {
 }
 
 extension LetStatement: Statement {
-    public func statementNode() {}
-
     public var tokenLiteral: String {
         return token.literal
     }
@@ -67,8 +61,6 @@ public struct Identifier {
 }
 
 extension Identifier: Expression {
-    public func expressionNode() {}
-    
     public var tokenLiteral: String {
         return token.literal
     }
@@ -83,8 +75,6 @@ public struct ReturnStatement {
 }
 
 extension ReturnStatement: Statement {
-    public func statementNode() {}
-    
     public var tokenLiteral: String {
         return token.literal
     }
