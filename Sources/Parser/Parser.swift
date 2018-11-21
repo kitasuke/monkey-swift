@@ -10,21 +10,13 @@ import Token
 import Lexer
 import Ast
 
-typealias PrefixParseFunc = ((Token) -> Expression)
-typealias InfixParseFunc = ((Expression) -> Expression)
-
 public struct Parser {
     var lexer: Lexer
     var currentToken = Token(type: .unknown)
     var peekToken = Token(type: .unknown)
-    var prefixParseFuncs: [TokenType: PrefixParseFunc] = [:]
-    var infixParseFuncs: [TokenType: InfixParseFunc] = [:]
-
+    
     public init(lexer: Lexer) {
         self.lexer = lexer
-        
-        register(prefixParseFunc: parseIdentifier, for: .identifier)
-        register(prefixParseFunc: parseIntegerLiteral, for: .int)
         
         setNextToken()
     }
@@ -72,7 +64,7 @@ public struct Parser {
         }
         
         setNextToken()
-        guard let value = parseExpression(from: currentToken) as? Identifier else {
+        guard let value = parseExpression() as? Identifier else {
             throw ParserError.expressionParsingFailed(token: peekToken)
         }
         
@@ -88,7 +80,7 @@ public struct Parser {
         
         setNextToken()
         
-        guard let value = parseExpression(from: currentToken) as? Identifier else {
+        guard let value = parseExpression() as? Identifier else {
             throw ParserError.expressionParsingFailed(token: peekToken)
         }
         
@@ -102,7 +94,7 @@ public struct Parser {
     mutating func parseExpressionStatement() -> ExpressionStatement? {
         let expressionToken = currentToken
         
-        guard let expression = parseExpression(from: currentToken) else {
+        guard let expression = parseExpression() else {
             return nil
         }
         
@@ -113,29 +105,22 @@ public struct Parser {
         return .init(token: expressionToken, expression: expression)
     }
     
-    func parseExpression(from token: Token, for precedence: Precedence = .lowest) -> Expression? {
-        guard let prefix = prefixParseFuncs[currentToken.type] else {
-            return nil
+    func parseExpression(for precedence: Precedence = .lowest) -> Expression? {
+        // prefix parsing
+        switch currentToken.type {
+        case .identifier: return parseIdentifier()
+        case .int: return parseIntegerLiteral()
+        default: return nil
         }
-        return prefix(token)
     }
     
-    func parseIdentifier(from token: Token) -> Expression {
-        return Identifier(token: token)
+    func parseIdentifier() -> Expression {
+        return Identifier(token: currentToken)
     }
     
-    func parseIntegerLiteral(from token: Token) -> Expression {
-        return Identifier(token: .makeNumber(number: token.literal))
+    func parseIntegerLiteral() -> Expression {
+        return Identifier(token: .makeNumber(number: currentToken.literal))
     }
-    
-    mutating func register(prefixParseFunc: @escaping PrefixParseFunc, for tokenType: TokenType) {
-        prefixParseFuncs[tokenType] = prefixParseFunc
-    }
-    
-    mutating func register(infixParseFunc: @escaping InfixParseFunc, for tokenType: TokenType) {
-        infixParseFuncs[tokenType] = infixParseFunc
-    }
-
     
     mutating func setNextToken() {
         currentToken = peekToken
