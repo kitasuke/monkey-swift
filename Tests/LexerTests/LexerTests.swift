@@ -36,10 +36,7 @@ final class LexerTests: XCTestCase {
         var lexer = Lexer(input: input)
         expectedTokens.forEach { expectedToken in
             let token = lexer.nextToken()
-
-            if token != expectedToken {
-                XCTFail("tokenType wrong. expected=\(expectedToken), got=\(token)")
-            }
+            XCTAssertTrue(token == expectedToken, "tokenType wrong. expected=\(expectedToken), got=\(token)")
         }
     }
 }

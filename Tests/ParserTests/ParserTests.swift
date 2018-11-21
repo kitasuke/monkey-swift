@@ -46,9 +46,7 @@ final class ParserTests: XCTestCase {
         
         for (index, expectedIdentifier) in expectedIdentifiers.enumerated() {
             let statement = program.statements[index]
-            if !testLetStatement(statement, name: expectedIdentifier) {
-                return
-            }
+            testLetStatement(statement, name: expectedIdentifier)
         }
     }
     
@@ -84,34 +82,56 @@ final class ParserTests: XCTestCase {
                 return
             }
             
-            guard returnStatement.token.type == .return else {
-                XCTFail("tokenType not \(TokenType.return). got=\(returnStatement.token.type)")
-                return
-            }
+            XCTAssertTrue(returnStatement.token.type == .return, "tokenType not \(TokenType.return). got=\(returnStatement.token.type)")
         }
     }
     
-    private func testLetStatement(_ statement: Statement, name: String) -> Bool {
+    func test_identifierExpression() {
+        let input = "foobar;"
+        
+        let lexer = Lexer(input: input)
+        var parser = Parser(lexer: lexer)
+        
+        let program: Program
+        do {
+            program = try parser.parseProgram()
+        } catch let error as ParserError {
+            XCTFail(error.message); return
+        } catch {
+            XCTFail("parseProgram failed"); return
+        }
+        
+        guard !program.statements.isEmpty else {
+            XCTFail("program.statements is empty")
+            return
+        }
+        
+        guard let stmt = program.statements[0] as? ExpressionStatement else {
+            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
+            return
+        }
+        
+        guard let identifier = stmt.expression as? Identifier else {
+            XCTFail("stmt.expression not \(Identifier.self). got=\(stmt.expression)")
+            return
+        }
+        
+        XCTAssertTrue(identifier.value == "foobar", "identifier.value not foobar. got=\(identifier.value)")
+        XCTAssertTrue(identifier.tokenLiteral == "foobar", "identifier.tokenLiteral not foobar. got=\(identifier.tokenLiteral)")
+    }
+    
+    private func testLetStatement(_ statement: Statement, name: String) {
         guard statement.tokenLiteral == Token(type: .let).literal else {
             XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")
-            return false
+            return
         }
         
         guard let letStatement = statement as? LetStatement else {
             XCTFail("statement not \(LetStatement.self). got=\(type(of: statement))")
-            return false
+            return
         }
         
-        guard letStatement.name.value == name else {
-            XCTFail("value not \(letStatement.name.value). got=\(name)")
-            return false
-        }
-        
-        guard letStatement.name.tokenLiteral == name else {
-            XCTFail("tokenLiteral not \(letStatement.name.tokenLiteral). got=\(name)")
-            return false
-        }
-        
-        return true
+        XCTAssertTrue(letStatement.name.value == name, "letStatement.name not \(name). got=\(letStatement.name)")
+        XCTAssertTrue(letStatement.name.tokenLiteral == name, "letStatement.name.tokenLiteral not \(name). got=\(letStatement.name.tokenLiteral)")
     }
 }

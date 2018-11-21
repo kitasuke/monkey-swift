@@ -39,5 +39,8 @@ let package = Package(
         .testTarget(
             name: "ParserTests",
             dependencies: ["Token", "Lexer", "Ast", "Parser"]),
+        .testTarget(
+            name: "AstTests",
+            dependencies: ["Token", "Ast"]),
     ]
 )
