@@ -15,6 +15,13 @@ public struct Parser {
     var currentToken = Token(type: .unknown)
     var peekToken = Token(type: .unknown)
     
+    private var currentPrecedence: PrecedenceKind {
+        return .precedence(for: currentToken.type)
+    }
+    private var peekPrecedence: PrecedenceKind {
+        return .precedence(for: peekToken.type)
+    }
+    
     public init(lexer: Lexer) {
         self.lexer = lexer
         
@@ -107,7 +114,7 @@ public struct Parser {
         expression = leftExpression
         
         while !isPeekToken(equalTo: .semicolon) &&
-            precedence.rawValue < peekPrecedence().rawValue {
+            precedence.rawValue < peekPrecedence.rawValue {
             guard let infixExpression = try parseInfixOperator(with: expression) else {
                 return leftExpression
             }
@@ -141,7 +148,7 @@ public struct Parser {
     private mutating func parseInfixExpression(with left: Expression) throws -> Expression? {
         let infixToken = currentToken
         
-        let precedence = currentPrecedence()
+        let precedence = currentPrecedence
         setNextToken()
         
         guard let right = try parseExpression(for: precedence) else {
@@ -173,14 +180,6 @@ public struct Parser {
         peekToken = lexer.nextToken()
     }
     
-    private func isCurrentToken(equalTo tokenType: TokenType) -> Bool {
-        return currentToken.type == tokenType
-    }
-    
-    private func isPeekToken(equalTo tokenType: TokenType) -> Bool {
-        return peekToken.type == tokenType
-    }
-    
     private mutating func setNextToken(expects tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
             throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekToken.type)
@@ -189,11 +188,11 @@ public struct Parser {
         setNextToken()
     }
     
-    private func peekPrecedence() -> PrecedenceKind {
-        return PrecedenceKind.precedence(for: peekToken.type)
+    private func isCurrentToken(equalTo tokenType: TokenType) -> Bool {
+        return currentToken.type == tokenType
     }
     
-    private func currentPrecedence() -> PrecedenceKind {
-        return PrecedenceKind.precedence(for: currentToken.type)
+    private func isPeekToken(equalTo tokenType: TokenType) -> Bool {
+        return peekToken.type == tokenType
     }
 }
