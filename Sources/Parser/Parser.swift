@@ -40,7 +40,7 @@ public struct Parser {
         return Program(statements: statements)
     }
     
-    mutating func parseStatement() throws -> Statement? {
+    private mutating func parseStatement() throws -> Statement? {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
@@ -48,7 +48,7 @@ public struct Parser {
         }
     }
     
-    mutating func parseLetStatement() throws -> LetStatement {
+    private mutating func parseLetStatement() throws -> LetStatement {
         let letToken = currentToken
         
         do { try setNextToken(expects: .identifier)
@@ -64,7 +64,7 @@ public struct Parser {
         }
         
         setNextToken()
-        guard let value = parseExpression() as? Identifier else {
+        guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: peekToken)
         }
         
@@ -75,12 +75,12 @@ public struct Parser {
         return .init(token: letToken, name: name, value: value)
     }
     
-    mutating func parseReturnStatement() throws -> ReturnStatement {
+    private mutating func parseReturnStatement() throws -> ReturnStatement {
         let returnToken = currentToken
         
         setNextToken()
         
-        guard let value = parseExpression() as? Identifier else {
+        guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: peekToken)
         }
         
@@ -91,11 +91,17 @@ public struct Parser {
         return .init(token: returnToken, value: value)
     }
     
-    mutating func parseExpressionStatement() -> ExpressionStatement? {
+    private mutating func parseExpressionStatement() -> ExpressionStatement? {
         let expressionToken = currentToken
         
-        guard let expression = parseExpression() else {
-            return nil
+        let expression: Expression
+        do {
+            guard let _expression = try parseExpression() else {
+                return nil
+            }
+            expression = _expression
+        } catch {
+            fatalError()
         }
         
         if isPeekToken(equalTo: .semicolon) {
@@ -105,37 +111,52 @@ public struct Parser {
         return .init(token: expressionToken, expression: expression)
     }
     
-    func parseExpression(for precedence: Precedence = .lowest) -> Expression? {
+    private mutating func parseExpression(for precedence: Precedence = .lowest) throws -> Expression? {
         // prefix parsing
+        return try parsePrefixOperator()
+    }
+    
+    private mutating func parsePrefixExpression() throws -> Expression {
+        let prefixToken = currentToken
+        
+        setNextToken()
+        guard let right = try parseExpression(for: .prefix) else {
+            fatalError()
+        }
+        return PrefixExpression(token: currentToken, operator: prefixToken.literal, right: right)
+    }
+    
+    private mutating func parsePrefixOperator() throws -> Expression? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
+        case .bang, .minus: return try parsePrefixExpression()
         default: return nil
         }
     }
     
-    func parseIdentifier() -> Expression {
+    private func parseIdentifier() -> Expression {
         return Identifier(token: currentToken)
     }
     
-    func parseIntegerLiteral() -> Expression {
-        return Identifier(token: .makeNumber(number: currentToken.literal))
+    private func parseIntegerLiteral() -> Expression {
+        return IntegerLiteral(token: .makeNumber(number: currentToken.literal))
     }
-    
-    mutating func setNextToken() {
+
+    private mutating func setNextToken() {
         currentToken = peekToken
         peekToken = lexer.nextToken()
     }
     
-    func isCurrentToken(equalTo tokenType: TokenType) -> Bool {
+    private func isCurrentToken(equalTo tokenType: TokenType) -> Bool {
         return currentToken.type == tokenType
     }
     
-    func isPeekToken(equalTo tokenType: TokenType) -> Bool {
+    private func isPeekToken(equalTo tokenType: TokenType) -> Bool {
         return peekToken.type == tokenType
     }
     
-    mutating func setNextToken(expects tokenType: TokenType) throws {
+    private mutating func setNextToken(expects tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
             throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekToken.type)
         }

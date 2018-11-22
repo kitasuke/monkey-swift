@@ -43,9 +43,9 @@ extension Program: Node {
 public struct LetStatement {
     public let token: Token
     public let name: Identifier
-    public let value: Identifier
+    public let value: Expression
     
-    public init(token: Token, name: Identifier, value: Identifier) {
+    public init(token: Token, name: Identifier, value: Expression) {
         self.token = token
         self.name = name
         self.value = value
@@ -62,32 +62,11 @@ extension LetStatement: Statement {
     }
 }
 
-public struct Identifier {
-    public let token: Token
-    public var value: String {
-        return token.literal
-    }
-    
-    public init(token: Token) {
-        self.token = token
-    }
-}
-
-extension Identifier: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
-    public var description: String {
-        return value
-    }
-}
-
 public struct ReturnStatement {
     public let token: Token
-    public let value: Identifier
+    public let value: Expression
     
-    public init(token: Token, value: Identifier) {
+    public init(token: Token, value: Expression) {
         self.token = token
         self.value = value
     }
@@ -120,5 +99,68 @@ extension ExpressionStatement: Statement {
     
     public var description: String {
         return expression.description
+    }
+}
+
+public struct PrefixExpression {
+    public let token: Token
+    public let `operator`: String
+    public let right: Expression
+    
+    public init(token: Token, operator: String, right: Expression) {
+        self.token = token
+        self.operator = `operator`
+        self.right = right
+    }
+}
+
+extension PrefixExpression: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return "(\(`operator`)\(right.description))"
+    }
+}
+
+public struct Identifier {
+    public let token: Token
+    public var value: String {
+        return token.literal
+    }
+    
+    public init(token: Token) {
+        self.token = token
+    }
+}
+
+extension Identifier: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return value
+    }
+}
+
+public struct IntegerLiteral {
+    public let token: Token
+    public let value: Int64
+    
+    public init(token: Token) {
+        self.token = token
+        self.value = Int64(token.literal) ?? 0
+    }
+}
+
+extension IntegerLiteral: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return token.literal
     }
 }

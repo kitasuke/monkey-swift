@@ -18,7 +18,7 @@ final class AstTests: XCTestCase {
                     LetStatement(
                         token: .init(type: .let),
                         name: .init(token: .makeIdentifier(identifier: "x")),
-                        value: .init(token: .makeNumber(number: "5"))
+                        value: IntegerLiteral(token: .makeNumber(number: "5"))
                     )
                 ]
             ),
@@ -27,7 +27,7 @@ final class AstTests: XCTestCase {
                     LetStatement(
                         token: .init(type: .let),
                         name: .init(token: .makeIdentifier(identifier: "myVar")),
-                        value: .init(token: .makeIdentifier(identifier: "anotherVar"))
+                        value: Identifier(token: .makeIdentifier(identifier: "anotherVar"))
                     )
                 ]
             )
