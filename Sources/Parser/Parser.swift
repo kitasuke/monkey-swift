@@ -100,7 +100,7 @@ public struct Parser {
     }
     
     private mutating func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
-        var expression: Expression?
+        var expression: Expression
         guard let leftExpression = try parsePrefixOperator() else {
             return nil
         }
@@ -108,7 +108,7 @@ public struct Parser {
         
         while !isPeekToken(equalTo: .semicolon) &&
             precedence.rawValue < peekPrecedence().rawValue {
-            guard let infixExpression = try parseInfixOperator(with: leftExpression) else {
+            guard let infixExpression = try parseInfixOperator(with: expression) else {
                 return leftExpression
             }
             

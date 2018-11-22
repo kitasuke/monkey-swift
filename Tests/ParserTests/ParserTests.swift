@@ -205,6 +205,39 @@ final class ParserTests: XCTestCase {
         }
     }
     
+    func test_operatorPrecedenceParsing() {
+        let precedenceTests: [(input: String, expected: String)] = [
+            (input: "-a * b", expected: "((-a) * b)"),
+            (input: "!-a", expected: "(!(-a))"),
+            (input: "a + b + c", expected: "((a + b) + c)"),
+            (input: "a + b - c", expected: "((a + b) - c)"),
+            (input: "a * b * c", expected: "((a * b) * c)"),
+            (input: "a * b / c", expected: "((a * b) / c)"),
+            (input: "a + b * c", expected: "(a + (b * c))"),
+            (input: "a + b * c + d / e - f", expected: "(((a + (b * c)) + (d / e)) - f)"),
+            (input: "3 + 4; -5 * 5", expected: "(3 + 4)((-5) * 5)"),
+            (input: "5 > 4 == 3 < 4", expected: "((5 > 4) == (3 < 4))"),
+            (input: "5 > 4 != 3 < 4", expected: "((5 > 4) != (3 < 4))"),
+            (input: "3 + 4 * 5 == 3 * 1 + 4 * 5", expected: "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))")
+        ]
+        
+        precedenceTests.forEach {
+            let lexer = Lexer(input: $0.input)
+            var parser = Parser(lexer: lexer)
+            
+            let program: Program
+            do {
+                program = try parser.parseProgram()
+            } catch let error as ParserError {
+                XCTFail(error.message); return
+            } catch {
+                XCTFail("parseProgram failed"); return
+            }
+            
+            XCTAssertTrue(program.description == $0.expected, "program.description not \($0.expected). got=\(program.description)")
+        }
+    }
+    
     private func testLetStatement(_ statement: Statement, name: String) {
         guard statement.tokenLiteral == Token(type: .let).literal else {
             XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")
