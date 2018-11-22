@@ -44,24 +44,18 @@ public struct Parser {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
-        default: return parseExpressionStatement()
+        default: return try parseExpressionStatement()
         }
     }
     
     private mutating func parseLetStatement() throws -> LetStatement {
         let letToken = currentToken
         
-        do { try setNextToken(expects: .identifier)
-        } catch let error {
-            throw error
-        }
-        
+        try setNextToken(expects: .identifier)
+
         let name = Identifier(token: currentToken)
         
-        do { try setNextToken(expects: .assign)
-        }  catch let error {
-            throw error
-        }
+        try setNextToken(expects: .assign)
         
         setNextToken()
         guard let value = try parseExpression() else {
@@ -91,17 +85,11 @@ public struct Parser {
         return .init(token: returnToken, value: value)
     }
     
-    private mutating func parseExpressionStatement() -> ExpressionStatement? {
+    private mutating func parseExpressionStatement() throws -> ExpressionStatement? {
         let expressionToken = currentToken
         
-        let expression: Expression
-        do {
-            guard let _expression = try parseExpression() else {
-                return nil
-            }
-            expression = _expression
-        } catch {
-            fatalError()
+        guard let expression = try parseExpression() else {
+            return nil
         }
         
         if isPeekToken(equalTo: .semicolon) {
@@ -111,17 +99,32 @@ public struct Parser {
         return .init(token: expressionToken, expression: expression)
     }
     
-    private mutating func parseExpression(for precedence: Precedence = .lowest) throws -> Expression? {
-        // prefix parsing
-        return try parsePrefixOperator()
+    private mutating func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
+        var expression: Expression?
+        guard let leftExpression = try parsePrefixOperator() else {
+            return nil
+        }
+        expression = leftExpression
+        
+        while !isPeekToken(equalTo: .semicolon) &&
+            precedence.rawValue < peekPrecedence().rawValue {
+            guard let infixExpression = try parseInfixOperator(with: leftExpression) else {
+                return leftExpression
+            }
+            
+            expression = infixExpression
+        }
+        
+        return expression
     }
     
-    private mutating func parsePrefixExpression() throws -> Expression {
+    private mutating func parsePrefixExpression() throws -> Expression? {
         let prefixToken = currentToken
         
         setNextToken()
         guard let right = try parseExpression(for: .prefix) else {
-            fatalError()
+            assertionFailure("failed to parse unexpected expression: \(currentToken)")
+            return nil
         }
         return PrefixExpression(token: currentToken, operator: prefixToken.literal, right: right)
     }
@@ -131,6 +134,28 @@ public struct Parser {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
         case .bang, .minus: return try parsePrefixExpression()
+        default: return nil
+        }
+    }
+    
+    private mutating func parseInfixExpression(with left: Expression) throws -> Expression? {
+        let infixToken = currentToken
+        
+        let precedence = currentPrecedence()
+        setNextToken()
+        
+        guard let right = try parseExpression(for: precedence) else {
+            return nil
+        }
+        
+        return InfixExpression(token: infixToken, left: left, right: right)
+    }
+    
+    private mutating func parseInfixOperator(with left: Expression) throws -> Expression? {
+        switch peekToken.type {
+        case .plus, .minus, .slash, .asterisk, .equal, .notEqual, .lessThan, .greaterThan:
+            setNextToken()
+            return try parseInfixExpression(with: left)
         default: return nil
         }
     }
@@ -162,5 +187,13 @@ public struct Parser {
         }
         
         setNextToken()
+    }
+    
+    private func peekPrecedence() -> PrecedenceKind {
+        return PrecedenceKind.precedence(for: peekToken.type)
+    }
+    
+    private func currentPrecedence() -> PrecedenceKind {
+        return PrecedenceKind.precedence(for: currentToken.type)
     }
 }

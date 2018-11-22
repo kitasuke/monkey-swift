@@ -124,6 +124,30 @@ extension PrefixExpression: Expression {
     }
 }
 
+public struct InfixExpression {
+    public let token: Token
+    public let left: Expression
+    public let `operator`: String
+    public let right: Expression
+    
+    public init(token: Token, left: Expression, right: Expression) {
+        self.token = token
+        self.left = left
+        self.operator = token.literal
+        self.right = right
+    }
+}
+
+extension InfixExpression: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return "(\(left.description) \(`operator`) \(right.description))"
+    }
+}
+
 public struct Identifier {
     public let token: Token
     public var value: String {

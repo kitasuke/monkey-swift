@@ -28,6 +28,7 @@ public struct Lexer {
         
         switch character {
         case TokenSymbol.equal.rawValue where peekCharacter() == TokenSymbol.equal.rawValue:
+            setNextCharacter()
             tokenType = .equal
         case TokenSymbol.equal.rawValue:
             tokenType = .assign
@@ -36,6 +37,7 @@ public struct Lexer {
         case TokenSymbol.minus.rawValue:
             tokenType = .minus
         case TokenSymbol.bang.rawValue where peekCharacter() == TokenSymbol.equal.rawValue:
+            setNextCharacter()
             tokenType = .notEqual
         case TokenSymbol.bang.rawValue:
             tokenType = .bang

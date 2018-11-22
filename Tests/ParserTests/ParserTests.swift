@@ -159,6 +159,52 @@ final class ParserTests: XCTestCase {
         }
     }
     
+    func test_parsingInfixExpressions() {
+        let infixTests: [(input: String, leftValue: Int64, `operator`: String, rightValue: Int64)] = [
+            (input: "5 + 5;", leftValue: 5, operator: "+", rightValue: 5),
+            (input: "5 - 5;", leftValue: 5, operator: "-", rightValue: 5),
+            (input: "5 * 5;", leftValue: 5, operator: "*", rightValue: 5),
+            (input: "5 / 5;", leftValue: 5, operator: "/", rightValue: 5),
+            (input: "5 > 5;", leftValue: 5, operator: ">", rightValue: 5),
+            (input: "5 < 5;", leftValue: 5, operator: "<", rightValue: 5),
+            (input: "5 == 5;", leftValue: 5, operator: "==", rightValue: 5),
+            (input: "5 != 5;", leftValue: 5, operator: "!=", rightValue: 5)
+        ]
+        
+        infixTests.forEach {
+            let lexer = Lexer(input: $0.input)
+            var parser = Parser(lexer: lexer)
+            let program: Program
+            
+            do {
+                program = try parser.parseProgram()
+            } catch let error as ParserError {
+                XCTFail(error.message); return
+            } catch {
+                XCTFail("parseProgram failed"); return
+            }
+            
+            guard !program.statements.isEmpty else {
+                XCTFail("program.statements is empty")
+                return
+            }
+            
+            guard let statement = program.statements[0] as? ExpressionStatement else {
+                XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
+                return
+            }
+            
+            guard let infixExpression = statement.expression as? InfixExpression else {
+                XCTFail("statement.expression not \(InfixExpression.self). got=\(type(of: statement.expression))")
+                return
+            }
+            
+            testIntegerLiteral($0.leftValue, with: infixExpression.left)
+            XCTAssertTrue(infixExpression.operator == $0.operator, "infixExpression.operator not \($0.operator). got=\(infixExpression.operator)")
+            testIntegerLiteral($0.rightValue, with: infixExpression.right)
+        }
+    }
+    
     private func testLetStatement(_ statement: Statement, name: String) {
         guard statement.tokenLiteral == Token(type: .let).literal else {
             XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")
