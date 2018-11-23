@@ -136,12 +136,26 @@ public struct Parser {
         return PrefixExpression(token: currentToken, operator: prefixToken.literal, right: right)
     }
     
+    private mutating func parseGroupedExpression() throws -> Expression? {
+        setNextToken()
+        
+        guard let expression = try parseExpression() else {
+            assertionFailure("failed to parse unexpected expression: \(currentToken)")
+            return nil
+        }
+        
+        try setNextToken(expects: .rightParen)
+        
+        return expression
+    }
+    
     private mutating func parsePrefixOperator() throws -> Expression? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
         case .true, .false: return parseBoolean()
         case .bang, .minus: return try parsePrefixExpression()
+        case .leftParen: return try parseGroupedExpression()
         default: return nil
         }
     }
