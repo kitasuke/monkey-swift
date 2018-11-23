@@ -40,6 +40,28 @@ extension Program: Node {
     }
 }
 
+public struct BlockStatement {
+    public let token: Token
+    public let statements: [Statement]
+    
+    public init(token: Token, statements: [Statement]) {
+        self.token = token
+        self.statements = statements
+    }
+}
+
+extension BlockStatement: Statement {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return statements.reduce("") { result, statement in
+            result + statement.description
+        }
+    }
+}
+
 public struct LetStatement {
     public let token: Token
     public let name: Identifier
@@ -145,6 +167,32 @@ extension InfixExpression: Expression {
     
     public var description: String {
         return "(\(left.description) \(`operator`) \(right.description))"
+    }
+}
+
+public struct IfExpression {
+    public let token: Token
+    public let condition: Expression
+    public let consequence: BlockStatement
+    public let alternative: BlockStatement?
+    
+    public init(token: Token, condition: Expression, consequence: BlockStatement, alternative: BlockStatement?) {
+        self.token = token
+        self.condition = condition
+        self.consequence = consequence
+        self.alternative = alternative
+    }
+}
+
+extension IfExpression: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        var string = "if \(condition.description) \(consequence.description)"
+        alternative.flatMap { string = string + "else \($0.description)" }
+        return string
     }
 }
 

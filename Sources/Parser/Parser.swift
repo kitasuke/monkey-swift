@@ -32,11 +32,9 @@ public struct Parser {
         var statements: [Statement] = []
         
         while currentToken.type != .eof {
-            do {
-                if let statement = try parseStatement() {
-                    statements.append(statement)
-                }
-            } catch let error { throw error }
+            if let statement = try parseStatement() {
+                statements.append(statement)
+            }
 
             setNextToken()
         }
@@ -106,6 +104,22 @@ public struct Parser {
         return .init(token: expressionToken, expression: expression)
     }
     
+    private mutating func parseBlockStatement() throws -> BlockStatement {
+        let blockToken = currentToken
+        var statements = [Statement]()
+        
+        setNextToken()
+        
+        while !isCurrentToken(equalTo: .rightBrace) &&
+            !isCurrentToken(equalTo: .eof) {
+            if let statement = try parseStatement() {
+                statements.append(statement)
+            }
+            setNextToken()
+        }
+        return BlockStatement(token: blockToken, statements: statements)
+    }
+    
     private mutating func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
         var expression: Expression
         guard let leftExpression = try parsePrefixOperator() else {
@@ -149,6 +163,35 @@ public struct Parser {
         return expression
     }
     
+    private mutating func parseIfExpression() throws -> Expression? {
+        let ifToken = currentToken
+        
+        try setNextToken(expects: .leftParen)
+        setNextToken()
+        
+        guard let condition = try parseExpression() else {
+            assertionFailure("failed to parse unexpected expression: \(currentToken)")
+            return nil
+        }
+        
+        try setNextToken(expects: .rightParen)
+        try setNextToken(expects: .leftBrace)
+        
+        let consequence = try parseBlockStatement()
+        
+        let alternative: BlockStatement?
+        if isPeekToken(equalTo: .else) {
+            setNextToken()
+            try setNextToken(expects: .leftParen)
+            
+            alternative = try parseBlockStatement()
+        } else {
+            alternative = nil
+        }
+        
+        return IfExpression(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
+    }
+    
     private mutating func parsePrefixOperator() throws -> Expression? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
@@ -156,6 +199,7 @@ public struct Parser {
         case .true, .false: return parseBoolean()
         case .bang, .minus: return try parsePrefixExpression()
         case .leftParen: return try parseGroupedExpression()
+        case .if: return try parseIfExpression()
         default: return nil
         }
     }
