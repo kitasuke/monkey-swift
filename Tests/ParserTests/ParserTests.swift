@@ -19,17 +19,7 @@ final class ParserTests: XCTestCase {
             let foobar = 838383;
         """
         
-        let lexer = Lexer(input: input)
-        var parser = Parser(lexer: lexer)
-        
-        let program: Program
-        do {
-            program = try parser.parseProgram()
-        } catch let error as ParserError {
-            XCTFail(error.message); return
-        } catch {
-            XCTFail("parseProgram failed"); return
-        }
+        let program = makeProgram(from: input)
         
         let statementsCount = program.statements.count
         let expectedCount = 3
@@ -57,17 +47,7 @@ final class ParserTests: XCTestCase {
             return 993322;
         """
         
-        let lexer = Lexer(input: input)
-        var parser = Parser(lexer: lexer)
-        
-        let program: Program
-        do {
-            program = try parser.parseProgram()
-        } catch let error as ParserError {
-            XCTFail(error.message); return
-        } catch {
-            XCTFail("parseProgram failed"); return
-        }
+        let program = makeProgram(from: input)
         
         let statementsCount = program.statements.count
         let expectedCount = 3
@@ -89,17 +69,7 @@ final class ParserTests: XCTestCase {
     func test_identifierExpression() {
         let input = "foobar;"
         
-        let lexer = Lexer(input: input)
-        var parser = Parser(lexer: lexer)
-        
-        let program: Program
-        do {
-            program = try parser.parseProgram()
-        } catch let error as ParserError {
-            XCTFail(error.message); return
-        } catch {
-            XCTFail("parseProgram failed"); return
-        }
+        let program = makeProgram(from: input)
         
         guard !program.statements.isEmpty else {
             XCTFail("program.statements is empty")
@@ -121,17 +91,7 @@ final class ParserTests: XCTestCase {
         ]
         
         prefixTests.forEach {
-            let lexer = Lexer(input: $0.input)
-            var parser = Parser(lexer: lexer)
-
-            let program: Program
-            do {
-                program = try parser.parseProgram()
-            } catch let error as ParserError {
-                XCTFail(error.message); return
-            } catch {
-                XCTFail("parseProgram failed"); return
-            }
+            let program = makeProgram(from: $0.input)
             
             guard !program.statements.isEmpty else {
                 XCTFail("program.statements is empty")
@@ -169,17 +129,7 @@ final class ParserTests: XCTestCase {
         ]
         
         infixTests.forEach {
-            let lexer = Lexer(input: $0.input)
-            var parser = Parser(lexer: lexer)
-            let program: Program
-            
-            do {
-                program = try parser.parseProgram()
-            } catch let error as ParserError {
-                XCTFail(error.message); return
-            } catch {
-                XCTFail("parseProgram failed"); return
-            }
+            let program = makeProgram(from: $0.input)
             
             guard !program.statements.isEmpty else {
                 XCTFail("program.statements is empty")
@@ -221,17 +171,7 @@ final class ParserTests: XCTestCase {
         ]
         
         precedenceTests.forEach {
-            let lexer = Lexer(input: $0.input)
-            var parser = Parser(lexer: lexer)
-            
-            let program: Program
-            do {
-                program = try parser.parseProgram()
-            } catch let error as ParserError {
-                XCTFail(error.message); return
-            } catch {
-                XCTFail("parseProgram failed"); return
-            }
+            let program = makeProgram(from: $0.input)
             
             XCTAssertTrue(program.description == $0.expected, "program.description not \($0.expected). got=\(program.description)")
         }
@@ -244,16 +184,7 @@ final class ParserTests: XCTestCase {
         ]
         
         boolTests.forEach {
-            let lexer = Lexer(input: $0.input)
-            var parser = Parser(lexer: lexer)
-            let program: Program
-            do {
-                program = try parser.parseProgram()
-            } catch let error as ParserError {
-                XCTFail(error.message); return
-            } catch {
-                XCTFail("parseProgram failed"); return
-            }
+            let program = makeProgram(from: $0.input)
             
             guard !program.statements.isEmpty else {
                 XCTFail("program.statements is empty")
@@ -336,5 +267,20 @@ final class ParserTests: XCTestCase {
         
         testLiteralExpression(infixExpression.left, expected: leftValue)
         XCTAssertTrue(infixExpression.operator == `operator`, "infixExpression.operator not \(`operator`). got=\(infixExpression.operator)")
+    }
+    
+    private func makeProgram(from input: String) -> Program {
+        let lexer = Lexer(input: input)
+        var parser = Parser(lexer: lexer)
+        
+        let program: Program
+        do {
+            program = try parser.parseProgram()
+        } catch let error as ParserError {
+            XCTFail(error.message); fatalError()
+        } catch {
+            XCTFail("parseProgram failed"); fatalError()
+        }
+        return program
     }
 }
