@@ -140,6 +140,7 @@ public struct Parser {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
+        case .true, .false: return parseBoolean()
         case .bang, .minus: return try parsePrefixExpression()
         default: return nil
         }
@@ -173,6 +174,10 @@ public struct Parser {
     
     private func parseIntegerLiteral() -> Expression {
         return IntegerLiteral(token: .makeNumber(number: currentToken.literal))
+    }
+    
+    private func parseBoolean() -> Expression {
+        return Boolean(token: currentToken)
     }
 
     private mutating func setNextToken() {

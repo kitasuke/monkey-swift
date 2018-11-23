@@ -188,3 +188,23 @@ extension IntegerLiteral: Expression {
         return token.literal
     }
 }
+
+public struct Boolean {
+    public let token: Token
+    public let value: Bool
+    
+    public init(token: Token) {
+        self.token = token
+        self.value = Bool(token.literal) ?? false
+    }
+}
+
+extension Boolean: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return token.literal
+    }
+}
