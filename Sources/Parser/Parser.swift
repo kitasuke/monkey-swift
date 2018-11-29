@@ -220,6 +220,7 @@ public struct Parser {
         case .bang, .minus: return try parsePrefixExpression()
         case .leftParen: return try parseGroupedExpression()
         case .if: return try parseIfExpression()
+        case .function: return try parseFunctionLiteral()
         default: return nil
         }
     }
@@ -248,6 +249,49 @@ public struct Parser {
     
     private func parseIdentifier() -> Expression {
         return Identifier(token: currentToken)
+    }
+    
+    private mutating func parseFunctionLiteral() throws -> Expression {
+        let functionToken = currentToken
+        
+        // fn
+        try setNextToken(expects: .leftParen)
+        
+        // (...)
+        let parameters = try parseFunctionParameters()
+        
+        try setNextToken(expects: .leftBrace)
+        
+        let body = try parseBlockStatement()
+        
+        return FunctionLiteral(token: functionToken, parameters: parameters, body: body)
+    }
+    
+    private mutating func parseFunctionParameters() throws -> [Identifier] {
+        // (
+        guard !isPeekToken(equalTo: .rightParen) else {
+            setNextToken()
+            return []
+        }
+        
+        // x
+        setNextToken()
+        
+        var identifiers: [Identifier] = []
+        identifiers.append(Identifier(token: currentToken))
+        
+        while isPeekToken(equalTo: .comma) {
+            // ,
+            setNextToken()
+            // y
+            setNextToken()
+            identifiers.append(Identifier(token: currentToken))
+        }
+        
+        // )
+        try setNextToken(expects: .rightParen)
+        
+        return identifiers
     }
     
     private func parseIntegerLiteral() -> Expression {

@@ -217,6 +217,29 @@ extension Identifier: Expression {
     }
 }
 
+public struct FunctionLiteral {
+    public let token: Token
+    public let parameters: [Identifier]
+    public let body: BlockStatement
+    
+    public init(token: Token, parameters: [Identifier], body: BlockStatement) {
+        self.token = token
+        self.parameters = parameters
+        self.body = body
+    }
+}
+
+extension FunctionLiteral: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        let params = parameters.map { $0.description }.joined(separator: ", ")
+        return "\(tokenLiteral)(\(params))\(body.description)"
+    }
+}
+
 public struct IntegerLiteral {
     public let token: Token
     public let value: Int64

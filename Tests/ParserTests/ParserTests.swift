@@ -70,18 +70,9 @@ final class ParserTests: XCTestCase {
         let input = "foobar;"
         
         let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
         
-        guard !program.statements.isEmpty else {
-            XCTFail("program.statements is empty")
-            return
-        }
-        
-        guard let stmt = program.statements[0] as? ExpressionStatement else {
-            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
-            return
-        }
-        
-        testIdentifier(expression: stmt.expression, expected: "foobar")
+        testIdentifier(expression: statement.expression, expected: "foobar")
     }
     
     func test_parsingPrefixExpressions() {
@@ -92,16 +83,7 @@ final class ParserTests: XCTestCase {
         
         prefixTests.forEach {
             let program = makeProgram(from: $0.input)
-            
-            guard !program.statements.isEmpty else {
-                XCTFail("program.statements is empty")
-                return
-            }
-            
-            guard let statement = program.statements[0] as? ExpressionStatement else {
-                XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
-                return
-            }
+            let statement = makeExpressionStatement(from: program)
             
             guard let expression = statement.expression as? PrefixExpression else {
                 XCTFail("statement.expression not \(PrefixExpression.self). got=\(type(of: statement.expression))")
@@ -130,16 +112,7 @@ final class ParserTests: XCTestCase {
         
         infixTests.forEach {
             let program = makeProgram(from: $0.input)
-            
-            guard !program.statements.isEmpty else {
-                XCTFail("program.statements is empty")
-                return
-            }
-            
-            guard let statement = program.statements[0] as? ExpressionStatement else {
-                XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
-                return
-            }
+            let statement = makeExpressionStatement(from: program)
             
             testInfixExpression(statement.expression, leftValue: $0.leftValue, operator: $0.operator, rightValue: $0.rightValue)
         }
@@ -185,16 +158,7 @@ final class ParserTests: XCTestCase {
         
         boolTests.forEach {
             let program = makeProgram(from: $0.input)
-            
-            guard !program.statements.isEmpty else {
-                XCTFail("program.statements is empty")
-                return
-            }
-            
-            guard let statement = program.statements[0] as? ExpressionStatement else {
-                XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
-                return
-            }
+            let statement = makeExpressionStatement(from: program)
             
             testBoolean(expression: statement.expression, expected: $0.expected)
         }
@@ -204,16 +168,7 @@ final class ParserTests: XCTestCase {
         let input = "if (x < y) { x }"
         
         let program = makeProgram(from: input)
-        
-        guard !program.statements.isEmpty else {
-            XCTFail("program.statements is empty")
-            return
-        }
-        
-        guard let statement = program.statements[0] as? ExpressionStatement else {
-            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
-            return
-        }
+        let statement = makeExpressionStatement(from: program)
         
         guard let ifExpression = statement.expression as? IfExpression else {
             XCTFail("statement.expression not \(IfExpression.self). got=\(type(of: statement.expression))")
@@ -235,6 +190,54 @@ final class ParserTests: XCTestCase {
         testIdentifier(expression: consequence.expression, expected: "x")
         
         XCTAssertNil(ifExpression.alternative, "alternative should be nil")
+    }
+    
+    func test_functionLiteralParsing() {
+        let input = "fn(x, y) { x + y; }"
+        
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let functionLiteral = statement.expression as? FunctionLiteral else {
+            XCTFail("statement.expression not \(FunctionLiteral.self). got=\(statement.expression)")
+            return
+        }
+        
+        guard functionLiteral.parameters.count == 2 else {
+            XCTFail("function.parameters.count wrong. want 2, got=\(functionLiteral.parameters.count)")
+            return
+        }
+        
+        guard let bodyStatement = functionLiteral.body.statements[0] as? ExpressionStatement else {
+            XCTFail("function.body.statements[0] not \(ExpressionStatement.self). got=\(functionLiteral.body.statements[0])")
+            return
+        }
+        
+        testInfixExpression(bodyStatement.expression, leftValue: "x", operator: "+", rightValue: "y")
+    }
+    
+    func test_functionParametersParsing() {
+        let tests: [(input: String, expectedParams: [String])] = [
+            (input: "fn() {};", expectedParams: []),
+            (input: "fn(x) {};", expectedParams: ["x"]),
+            (input: "fn(x, y, z) {};", expectedParams: ["x", "y", "z"]),
+        ]
+        
+        tests.forEach {
+            let program = makeProgram(from: $0.input)
+            let statement = makeExpressionStatement(from: program)
+            
+            guard let functionLiteral = statement.expression as? FunctionLiteral else {
+                XCTFail("statement.expression not \(FunctionLiteral.self). got=\(statement.expression)")
+                return
+            }
+            
+            XCTAssertTrue(functionLiteral.parameters.count == $0.expectedParams.count, "functionLiteral.parameters.count wrong. want=\($0.expectedParams.count), got=\(functionLiteral.parameters.count)")
+            
+            for (index, param) in $0.expectedParams.enumerated() {
+                testLiteralExpression(functionLiteral.parameters[index], expected: param)
+            }
+        }
     }
     
     private func testLetStatement(_ statement: Statement, name: String) {
@@ -319,5 +322,19 @@ final class ParserTests: XCTestCase {
             XCTFail("parseProgram failed"); fatalError()
         }
         return program
+    }
+    
+    private func makeExpressionStatement(from program: Program) -> ExpressionStatement {
+        guard !program.statements.isEmpty else {
+            XCTFail("program.statements is empty")
+            fatalError()
+        }
+        
+        guard let statement = program.statements[0] as? ExpressionStatement else {
+            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
+            fatalError()
+        }
+        
+        return statement
     }
 }
