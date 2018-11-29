@@ -25,6 +25,7 @@ public struct Parser {
     public init(lexer: Lexer) {
         self.lexer = lexer
         
+        // set initial state
         setNextToken()
     }
     
@@ -36,6 +37,7 @@ public struct Parser {
                 statements.append(statement)
             }
 
+            // move to next token
             setNextToken()
         }
         
@@ -54,14 +56,18 @@ public struct Parser {
     }
     
     private mutating func parseLetStatement() throws -> LetStatement {
+        // let
         let letToken = currentToken
         
+        // x
         try setNextToken(expects: .identifier)
 
         let name = Identifier(token: currentToken)
         
+        // =
         try setNextToken(expects: .assign)
         
+        // x or 5
         setNextToken()
         guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: peekToken)
@@ -75,10 +81,11 @@ public struct Parser {
     }
     
     private mutating func parseReturnStatement() throws -> ReturnStatement {
+        // return
         let returnToken = currentToken
         
+        // x or 5
         setNextToken()
-        
         guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: peekToken)
         }
@@ -105,16 +112,17 @@ public struct Parser {
     }
     
     private mutating func parseBlockStatement() throws -> BlockStatement {
+        // x; x = y;...
         let blockToken = currentToken
-        var statements = [Statement]()
-        
         setNextToken()
         
+        var statements = [Statement]()
         while !isCurrentToken(equalTo: .rightBrace) &&
             !isCurrentToken(equalTo: .eof) {
             if let statement = try parseStatement() {
                 statements.append(statement)
             }
+            // move to next token
             setNextToken()
         }
         return BlockStatement(token: blockToken, statements: statements)
@@ -141,8 +149,8 @@ public struct Parser {
     
     private mutating func parsePrefixExpression() throws -> Expression? {
         let prefixToken = currentToken
-        
         setNextToken()
+        
         guard let right = try parseExpression(for: .prefix) else {
             assertionFailure("failed to parse unexpected expression: \(currentToken)")
             return nil
@@ -151,39 +159,51 @@ public struct Parser {
     }
     
     private mutating func parseGroupedExpression() throws -> Expression? {
+        // (
         setNextToken()
         
+        // x
         guard let expression = try parseExpression() else {
             assertionFailure("failed to parse unexpected expression: \(currentToken)")
             return nil
         }
         
+        // )
         try setNextToken(expects: .rightParen)
         
         return expression
     }
     
     private mutating func parseIfExpression() throws -> Expression? {
+        // if
         let ifToken = currentToken
         
+        // (
         try setNextToken(expects: .leftParen)
         setNextToken()
         
+        // x == y
         guard let condition = try parseExpression() else {
             assertionFailure("failed to parse unexpected expression: \(currentToken)")
             return nil
         }
         
+        // )
         try setNextToken(expects: .rightParen)
+        // {
         try setNextToken(expects: .leftBrace)
         
+        // x + y;
         let consequence = try parseBlockStatement()
         
         let alternative: BlockStatement?
         if isPeekToken(equalTo: .else) {
+            // else
             setNextToken()
+            // (
             try setNextToken(expects: .leftParen)
             
+            // y + z;
             alternative = try parseBlockStatement()
         } else {
             alternative = nil
