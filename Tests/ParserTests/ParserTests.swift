@@ -311,7 +311,7 @@ final class ParserTests: XCTestCase {
     
     private func testIdentifier(expression: Expression, expected: String) {
         guard let identifier = expression as? Identifier else {
-            XCTFail("stmt.expression not \(Identifier.self). got=\(expression)")
+            XCTFail("statement.expression not \(Identifier.self). got=\(expression)")
             return
         }
         
