@@ -150,6 +150,26 @@ final class ParserTests: XCTestCase {
         }
     }
     
+    func test_callExpressionParsing() {
+        let input = "add(1, 2 * 3, 4 + 5)"
+
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+
+        guard let callExpression = statement.expression as? CallExpression else {
+            XCTFail("statement.expression not \(CallExpression.self). got=\(statement.expression)")
+            return
+        }
+
+        testIdentifier(expression: callExpression.function, expected: "add")
+
+        XCTAssertTrue(callExpression.arguments.count == 3, "callExpression.arguments wrong. want 3, got \(callExpression.arguments.count)")
+
+        testLiteralExpression(callExpression.arguments[0], expected: 1)
+        testInfixExpression(callExpression.arguments[1], leftValue: 2, operator: "*", rightValue: 3)
+        testInfixExpression(callExpression.arguments[2], leftValue: 4, operator: "+", rightValue: 5)
+    }
+    
     func test_boolExpression() {
         let boolTests: [(input: String, expected: Bool)] = [
             (input: "true", expected: true),

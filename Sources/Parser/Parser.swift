@@ -212,6 +212,44 @@ public struct Parser {
         return IfExpression(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
     }
     
+    private mutating func parseCallExpression(with function: Expression) throws -> CallExpression {
+        let arguments = try parseCallArguments()
+        return CallExpression(token: currentToken, function: function, arguments: arguments)
+    }
+    
+    private mutating func parseCallArguments() throws -> [Expression] {
+        var arguments: [Expression] = []
+
+        // (
+        guard !isPeekToken(equalTo: .rightParen) else {
+            setNextToken()
+            return arguments
+        }
+        
+        // x
+        setNextToken()
+        
+        guard let argument = try parseExpression() else {
+            throw ParserError.expressionParsingFailed(token: currentToken)
+        }
+        arguments.append(argument)
+        
+        while isPeekToken(equalTo: .comma) {
+            // ,
+            setNextToken()
+            // y
+            setNextToken()
+            
+            if let argument = try parseExpression() {
+                arguments.append(argument)
+            }
+        }
+        
+        try setNextToken(expects: .rightParen)
+        
+        return arguments
+    }
+    
     private mutating func parsePrefixOperator() throws -> Expression? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
@@ -243,6 +281,9 @@ public struct Parser {
         case .plus, .minus, .slash, .asterisk, .equal, .notEqual, .lessThan, .greaterThan:
             setNextToken()
             return try parseInfixExpression(with: left)
+        case .leftParen:
+            setNextToken()
+            return try parseCallExpression(with: left)
         default: return nil
         }
     }

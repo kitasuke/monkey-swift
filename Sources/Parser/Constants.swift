@@ -24,6 +24,7 @@ extension PrecedenceKind {
         case .lessThan, .greaterThan: return .lessOrGreater
         case .plus, .minus: return .sum
         case .slash, .asterisk: return .product
+        case .leftParen: return .call
         default: return .lowest
         }
     }

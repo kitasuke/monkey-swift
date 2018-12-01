@@ -196,6 +196,29 @@ extension IfExpression: Expression {
     }
 }
 
+public struct CallExpression {
+    public let token: Token
+    public let function: Expression
+    public let arguments: [Expression]
+    
+    public init(token: Token, function: Expression, arguments: [Expression]) {
+        self.token = token
+        self.function = function
+        self.arguments = arguments
+    }
+}
+
+extension CallExpression: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        let arguments = self.arguments.map { $0.description }.joined(separator: ", ")
+        return "\(function.description)(\(arguments))"
+    }
+}
+
 public struct Identifier {
     public let token: Token
     public var value: String {
