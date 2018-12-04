@@ -1,6 +1,12 @@
+import Foundation
 import Repl
 
-print("Hello! This is the Monky programming language!")
+private let prompt = ">> "
+
+print("Hello! This is the Monkey programming language!")
 print("Feel free to type in commands")
 
-Repl.start(with: readLine() ?? "")
+while(true) {
+    print(prompt, terminator: "")
+    Repl.start(with: readLine() ?? "")
+}

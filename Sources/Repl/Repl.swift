@@ -7,18 +7,20 @@
 
 import Token
 import Lexer
-
-private let prompt = ">> "
+import Parser
 
 public struct Repl {
     
     public static func start(with input: String) {
-        var lexer = Lexer(input: input)
-        var token = lexer.nextToken()
-
-        while token.type != .eof {
-            print(token.literal)
-            token = lexer.nextToken()
+        let lexer = Lexer(input: input)
+        var parser = Parser(lexer: lexer)
+        do {
+            let program = try parser.parseProgram()
+            print(program.description)
+        } catch let error as ParserError {
+            fatalError(error.message)
+        } catch let error {
+            fatalError(error.localizedDescription)
         }
     }
 }
