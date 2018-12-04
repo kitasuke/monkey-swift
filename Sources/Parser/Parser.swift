@@ -73,7 +73,7 @@ public struct Parser {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
         
-        while !isPeekToken(equalTo: .semicolon) {
+        if isPeekToken(equalTo: .semicolon) {
             setNextToken()
         }
         
@@ -90,7 +90,7 @@ public struct Parser {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
         
-        while !isPeekToken(equalTo: .semicolon) {
+        if isPeekToken(equalTo: .semicolon) {
             setNextToken()
         }
         
