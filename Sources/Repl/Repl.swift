@@ -18,9 +18,9 @@ public struct Repl {
             let program = try parser.parseProgram()
             print(program.description)
         } catch let error as ParserError {
-            fatalError(error.message)
+            print(error.message)
         } catch let error {
-            fatalError(error.localizedDescription)
+            print(error.localizedDescription)
         }
     }
 }
