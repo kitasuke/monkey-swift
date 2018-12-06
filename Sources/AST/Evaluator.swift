@@ -29,7 +29,7 @@ public struct Evaluator {
             return ReturnValue(value: value)
         case let node as PrefixExpression:
             let right = try evaluate(astNode: node.right)
-            return evaluatePrefixExpression(operator: node.operator, right: right)
+            return try evaluatePrefixExpression(operator: node.operator, right: right)
         case let node as InfixExpression:
             let left = try evaluate(astNode: node.left)
             let right = try evaluate(astNode: node.right)
@@ -77,14 +77,14 @@ public struct Evaluator {
         return result
     }
     
-    private func evaluatePrefixExpression(operator: String, right: Object) -> Object {
+    private func evaluatePrefixExpression(operator: String, right: Object) throws -> Object {
         switch `operator` {
         case Token(type: .bang).literal:
             return evaluateBangPrefixOperatorExpression(right)
         case Token(type: .minus).literal:
-            return evaluateMinusPrefixOperatorExpression(right)
+            return try evaluateMinusPrefixOperatorExpression(right)
         default:
-            return null
+            throw EvaluatorError.unknownOperator(left: nil, operator: `operator`, right: right.type)
         }
     }
     
@@ -101,10 +101,10 @@ public struct Evaluator {
         }
     }
     
-    private func evaluateMinusPrefixOperatorExpression(_ object: Object) -> Object {
+    private func evaluateMinusPrefixOperatorExpression(_ object: Object) throws -> Object {
         guard object.type == .integer,
             let integer = object as? Integer else {
-            return null
+            throw EvaluatorError.unknownOperator(left: nil, operator: Token(type: .minus).literal, right: object.type)
         }
         
         return Integer(value: -integer.value)

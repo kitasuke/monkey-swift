@@ -122,6 +122,40 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_errorHandling() {
+        let tests: [(input: String, expected: EvaluatorError)] = [
+            (input: "5 + true;", expected: EvaluatorError.typeMissMatch(left: .integer, operator: "+", right: .boolean)),
+            (input: "5 + true; 5;", expected: EvaluatorError.typeMissMatch(left: .integer, operator: "+", right: .boolean)),
+            (input: "-true", expected: EvaluatorError.unknownOperator(left: nil, operator: "-", right: .boolean)),
+            (input: "true + false;", expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
+            (input: "5; true + false; 5;", expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
+            (input: "if (10 > 1) { true + false; }", expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
+            (input:
+                """
+                    if (10 > 1) {
+                      if (10 > 1) {
+                        return true + false;
+                      }
+                    return 1;
+                    }
+                """,
+             expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
+        ]
+        
+        tests.forEach {
+            let program = makeProgram(from: $0.input)
+            do {
+                let evaluator = Evaluator()
+                _ = try evaluator.evaluate(astNode: program)
+                XCTFail("shouldn't reach here")
+            } catch let error as EvaluatorError {
+                XCTAssertTrue(error == $0.expected, "error wrong. got=\(error.description), want=\($0.expected)")
+            } catch {
+                XCTFail("unknown error"); fatalError()
+            }
+        }
+    }
+    
     private func testIntegerObject(_ object: Object, expected: Int64) {
         guard let integer = object as? Integer else {
             XCTFail("object not \(Integer.self). got=\(type(of: object))")
@@ -144,15 +178,24 @@ final class EvaluatorTests: XCTestCase {
         XCTAssertTrue(object.type == .null, "")
     }
     
-    private func makeObject(from input: String) -> Object {
+    private func makeProgram(from input: String) -> Program {
         let lexer = Lexer(input: input)
         var parser = Parser(lexer: lexer)
         
         let program: Program
-        let object: Object
         do {
             program = try parser.parse()
-            
+        } catch let error as Error & CustomStringConvertible {
+            XCTFail(error.description); fatalError()
+        } catch {
+            XCTFail("unknown error"); fatalError()
+        }
+        return program
+    }
+    
+    private func makeObject(from program: Program) -> Object {
+        let object: Object
+        do {
             let evaluator = Evaluator()
             object = try evaluator.evaluate(astNode: program)
         } catch let error as Error & CustomStringConvertible {
@@ -161,5 +204,29 @@ final class EvaluatorTests: XCTestCase {
             XCTFail("unknown error"); fatalError()
         }
         return object
+    }
+    
+    private func makeObject(from input: String) -> Object {
+        let program = makeProgram(from: input)
+        let object = makeObject(from: program)
+        return object
+    }
+}
+
+extension EvaluatorError: Equatable {
+    public static func == (lhs: EvaluatorError, rhs: EvaluatorError) -> Bool {
+        switch (lhs, rhs) {
+        case (.typeMissMatch(let lhsLeft, let lhsOperator, let lhsRight),
+              .typeMissMatch(let rhsLeft, let rhsOperator, let rhsRight)),
+             (.unknownOperator(let lhsLeft?, let lhsOperator, let lhsRight),
+              .unknownOperator(let rhsLeft?, let rhsOperator, let rhsRight)):
+            return (lhsLeft == rhsLeft) && (lhsOperator == rhsOperator) && (lhsRight == rhsRight)
+        case (.unknownOperator(_, let lhsOperator, let lhsRight),
+              .unknownOperator(_, let rhsOperator, let rhsRight)):
+            return (lhsOperator == rhsOperator) && (lhsRight == rhsRight)
+        default:
+            // return false because there is no need to test other errors
+            return false
+        }
     }
 }
