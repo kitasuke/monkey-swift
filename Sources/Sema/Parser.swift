@@ -198,8 +198,8 @@ public struct Parser {
         if isPeekToken(equalTo: .else) {
             // else
             setNextToken()
-            // (
-            try setNextToken(expects: .leftParen)
+            // {
+            try setNextToken(expects: .leftBrace)
             
             // y + z;
             alternative = try parseBlockStatement()

@@ -22,6 +22,8 @@ public struct Evaluator {
             return try evaluateStatements(node.statements)
         case let node as ExpressionStatement:
             return try evaluate(astNode: node.expression)
+        case let node as BlockStatement:
+            return try evaluateStatements(node.statements)
         case let node as PrefixExpression:
             let right = try evaluate(astNode: node.right)
             return evaluatePrefixExpression(operator: node.operator, right: right)
@@ -29,6 +31,8 @@ public struct Evaluator {
             let left = try evaluate(astNode: node.left)
             let right = try evaluate(astNode: node.right)
             return try evaluateInfixExpression(operator: node.operator, left: left, right: right)
+        case let node as IfExpression:
+            return try evaluateIfExpression(node)
         case let node as IntegerLiteral:
             return Integer(value: node.value)
         case let node as Sema.Boolean:
@@ -113,6 +117,27 @@ public struct Evaluator {
             return toBooleanObject(from: left.value != right.value)
         default:
             throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+        }
+    }
+    
+    private func evaluateIfExpression(_ expression: IfExpression) throws -> Object {
+        let condition = try evaluate(astNode: expression.condition)
+        
+        let isTruthy: (Object) -> Bool = { object in
+            switch object {
+            case _ where object.type == .null: return false
+            case let boolean as Boolean where boolean.value: return true
+            case let boolean as Boolean where !boolean.value: return false
+            default: return true
+            }
+        }
+        
+        if isTruthy(condition) {
+            return try evaluate(astNode: expression.consequence)
+        } else if let alternative = expression.alternative {
+            return try evaluate(astNode: alternative)
+        } else {
+            return null
         }
     }
     

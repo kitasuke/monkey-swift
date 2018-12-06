@@ -77,6 +77,27 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_ifElseExpressions() {
+        let tests: [(input: String, expected: Int64?)] = [
+            (input: "if (true) { 10 }", expected: 10),
+            (input: "if (false) { 10 }", expected: nil),
+            (input: "if (1) { 10 }", expected: 10),
+            (input: "if (1 < 2) { 10 }", expected: 10),
+            (input: "if (1 > 2) { 10 }", expected: nil),
+            (input: "if (1 > 2) { 10 } else { 20 }", expected: 20),
+            (input: "if (1 < 2) { 10 } else { 20 }", expected: 10),
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            if let value = $0.expected {
+                testIntegerObject(object, expected: value)
+            } else {
+                testNullObject(object)
+            }
+        }
+    }
+    
     private func testIntegerObject(_ object: Object, expected: Int64) {
         guard let integer = object as? Integer else {
             XCTFail("object not \(Integer.self). got=\(type(of: object))")
@@ -93,6 +114,10 @@ final class EvaluatorTests: XCTestCase {
         }
         
         XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
+    }
+    
+    private func testNullObject(_ object: Object) {
+        XCTAssertTrue(object.type == .null, "")
     }
     
     private func makeObject(from input: String) -> Object {
