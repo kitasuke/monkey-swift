@@ -6,14 +6,18 @@
 //
 
 import Foundation
+import Sema
 
 public enum EvaluatorError: Error, CustomStringConvertible {
-    case unknownObject
+    case unknownNode(Node)
+    case noValidExpression([Statement])
 
     public var description: String {
         switch self {
-        case .unknownObject:
-            return "unknown object"
+        case .unknownNode(let node):
+            return "unknown node: \(node.description)"
+        case .noValidExpression(let statements):
+            return "no valid expression from \(statements.map { $0.description })"
         }
     }
 }

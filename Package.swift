@@ -29,7 +29,7 @@ let package = Package(
             dependencies: ["Syntax", "Lexer", "Sema"]),
         .target(
             name: "Repl",
-            dependencies: ["Syntax", "Lexer", "Sema"]),
+            dependencies: ["Syntax", "Lexer", "Sema", "AST"]),
         .testTarget(
             name: "monkey-swiftTests",
             dependencies: ["monkey-swift"]),

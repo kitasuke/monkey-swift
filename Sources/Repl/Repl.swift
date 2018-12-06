@@ -8,6 +8,7 @@
 import Syntax
 import Lexer
 import Sema
+import AST
 
 public struct Repl {
     
@@ -16,7 +17,10 @@ public struct Repl {
         var parser = Parser(lexer: lexer)
         do {
             let program = try parser.parse()
-            print(program.description)
+
+            let evaluator = Evaluator()
+            let object = try evaluator.evaluate(astNode: program)
+            print(object.inspect())
         } catch let error as Error & CustomStringConvertible {
             print(error.description)
         } catch let error {
