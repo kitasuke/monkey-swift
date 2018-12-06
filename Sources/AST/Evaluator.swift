@@ -9,6 +9,16 @@ import Sema
 
 public struct Evaluator {
     
+    private let toBooleanObject: (Bool) -> Object = { value in
+        let `true` = Boolean(value: true)
+        let `false` = Boolean(value: false)
+        if value {
+            return `true`
+        } else {
+            return `false`
+        }
+    }
+    
     public init() {}
     
     public func evaluate(astNode: Node) throws -> Object {
@@ -19,6 +29,8 @@ public struct Evaluator {
             return try evaluate(astNode: node.expression)
         case let node as IntegerLiteral:
             return Integer(value: node.value)
+        case let node as Sema.Boolean:
+            return toBooleanObject(node.value)
         default:
             throw EvaluatorError.unknownNode(astNode)
         }

@@ -12,6 +12,7 @@ import Sema
 import AST
 
 typealias Integer = AST.Integer
+typealias Boolean = AST.Boolean
 
 final class EvaluatorTests: XCTestCase {
     func test_evaluateIntegerExpression() {
@@ -26,6 +27,18 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_evaluateBooleanExpression() {
+        let tests: [(input: String, expected: Bool)] = [
+            (input: "true", expected: true),
+            (input: "false", expected: false),
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testBooleanObject(object, expected: $0.expected)
+        }
+    }
+    
     private func testIntegerObject(_ object: Object, expected: Int64) {
         guard let integer = object as? Integer else {
             XCTFail("object not \(Integer.self). got=\(type(of: object))")
@@ -33,6 +46,15 @@ final class EvaluatorTests: XCTestCase {
         }
         
         XCTAssertTrue(integer.value == expected, "integer.value wrong. want=\(expected), got=\(integer.value)")
+    }
+    
+    private func testBooleanObject(_ object: Object, expected: Bool) {
+        guard let boolean = object as? Boolean else {
+            XCTFail("object not \(Boolean.self). got=\(type(of: object))")
+            return
+        }
+        
+        XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
     }
     
     private func makeObject(from input: String) -> Object {
