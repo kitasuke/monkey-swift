@@ -19,6 +19,8 @@ final class EvaluatorTests: XCTestCase {
         let tests: [(input: String, expected: Int64)] = [
             (input: "5", expected: 5),
             (input: "10", expected: 10),
+            (input: "-5", expected: -5),
+            (input: "-10", expected: -10),
         ]
         
         tests.forEach {
@@ -31,6 +33,22 @@ final class EvaluatorTests: XCTestCase {
         let tests: [(input: String, expected: Bool)] = [
             (input: "true", expected: true),
             (input: "false", expected: false),
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testBooleanObject(object, expected: $0.expected)
+        }
+    }
+    
+    func test_evaluateBangOperator() {
+        let tests: [(input: String, expected: Bool)] = [
+            (input: "!true", expected: false),
+            (input: "!false", expected: true),
+            (input: "!5", expected: false),
+            (input: "!!true", expected: true),
+            (input: "!!false", expected: false),
+            (input: "!!5", expected: true),
         ]
         
         tests.forEach {

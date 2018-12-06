@@ -126,7 +126,7 @@ extension ExpressionStatement: Statement {
 
 public struct PrefixExpression {
     public let token: Token
-    public let `operator`: String
+    public let `operator`: String // TODO enum
     public let right: Expression
     
     public init(token: Token, operator: String, right: Expression) {
