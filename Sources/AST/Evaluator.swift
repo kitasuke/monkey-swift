@@ -19,11 +19,14 @@ public struct Evaluator {
     public func evaluate(astNode: Node) throws -> Object {
         switch astNode {
         case let node as Program:
-            return try evaluateStatements(node.statements)
+            return try evaluateProgram(node)
         case let node as ExpressionStatement:
             return try evaluate(astNode: node.expression)
         case let node as BlockStatement:
-            return try evaluateStatements(node.statements)
+            return try evaluateBlockStatement(node)
+        case let node as ReturnStatement:
+            let value = try evaluate(astNode: node.value)
+            return ReturnValue(value: value)
         case let node as PrefixExpression:
             let right = try evaluate(astNode: node.right)
             return evaluatePrefixExpression(operator: node.operator, right: right)
@@ -42,11 +45,36 @@ public struct Evaluator {
         }
     }
     
-    private func evaluateStatements(_ statements: [Statement]) throws -> Object {
-        guard let object = try statements.map({ try evaluate(astNode: $0) }).last else {
-            throw EvaluatorError.noValidExpression(statements)
+    private func evaluateProgram(_ program: Program) throws -> Object {
+        var object: Object?
+        for statement in program.statements {
+            object = try evaluate(astNode: statement)
+            
+            if let returnValue = object as? ReturnValue {
+                return returnValue.value
+            }
         }
-        return object
+        
+        guard let result = object else {
+            throw EvaluatorError.noValidExpression(program.statements)
+        }
+        return result
+    }
+    
+    private func evaluateBlockStatement(_ statement: BlockStatement) throws -> Object {
+        var object: Object?
+        for statement in statement.statements {
+            object = try evaluate(astNode: statement)
+            
+            if let returnValue = object as? ReturnValue {
+                return returnValue
+            }
+        }
+        
+        guard let result = object else {
+            throw EvaluatorError.noValidExpression(statement.statements)
+        }
+        return result
     }
     
     private func evaluatePrefixExpression(operator: String, right: Object) -> Object {

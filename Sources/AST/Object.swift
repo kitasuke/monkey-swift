@@ -57,3 +57,21 @@ extension Null: Object {
         return type.rawValue
     }
 }
+
+public struct ReturnValue {
+    public let value: Object
+    
+    public init(value: Object) {
+        self.value = value
+    }
+}
+
+extension ReturnValue: Object {
+    public var type: ObjectType {
+        return .return
+    }
+    
+    public func inspect() -> String {
+        return value.inspect()
+    }
+}

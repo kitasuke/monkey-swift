@@ -98,6 +98,30 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_returnStatements() {
+        let tests: [(input: String, expected: Int64)] = [
+            (input: "return 10;", expected: 10),
+            (input: "return 10; 9;", expected: 10),
+            (input: "return 2 * 5; 9;", expected: 10),
+            (input: "9; return 2 * 5; 9;", expected: 10),
+            (input:
+                """
+                    if (10 > 1) {
+                         if (10 > 1) {
+                           return 10;
+                        }
+                        return 1;
+                    }
+                """,
+             expected: 10)
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testIntegerObject(object, expected: $0.expected)
+        }
+    }
+    
     private func testIntegerObject(_ object: Object, expected: Int64) {
         guard let integer = object as? Integer else {
             XCTFail("object not \(Integer.self). got=\(type(of: object))")

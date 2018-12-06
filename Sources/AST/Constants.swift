@@ -9,4 +9,5 @@ public enum ObjectType: String {
     case integer
     case boolean
     case null
+    case `return`
 }
