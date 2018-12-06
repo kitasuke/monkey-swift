@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import Token
+import Syntax
 import Lexer
 
 final class LexerTests: XCTestCase {

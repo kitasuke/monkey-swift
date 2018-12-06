@@ -1,11 +1,11 @@
 //
 //  Ast.swift
-//  Ast
+//  Sema
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
-import Token
+import Syntax
 
 public protocol Node {
     var tokenLiteral: String { get }

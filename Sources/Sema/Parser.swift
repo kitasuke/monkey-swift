@@ -1,14 +1,13 @@
 //
 //  Parser.swift
-//  Parser
+//  Sema
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
 import Foundation
-import Token
+import Syntax
 import Lexer
-import Ast
 
 public struct Parser {
     var lexer: Lexer
@@ -29,7 +28,7 @@ public struct Parser {
         setNextToken()
     }
     
-    public mutating func parseProgram() throws -> Program {
+    public mutating func parse() throws -> Program {
         var statements: [Statement] = []
         
         while currentToken.type != .eof {

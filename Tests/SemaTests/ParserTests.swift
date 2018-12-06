@@ -1,15 +1,14 @@
 //
 //  ParserTests.swift
-//  ParserTests
+//  SemaTests
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
 import XCTest
-import Token
+import Syntax
 import Lexer
-import Ast
-import Parser
+import Sema
 
 final class ParserTests: XCTestCase {
     func test_letStatement() {
@@ -335,11 +334,11 @@ final class ParserTests: XCTestCase {
         
         let program: Program
         do {
-            program = try parser.parseProgram()
-        } catch let error as ParserError {
-            XCTFail(error.message); fatalError()
+            program = try parser.parse()
+        } catch let error as Error & CustomStringConvertible {
+            XCTFail(error.description); fatalError()
         } catch {
-            XCTFail("parseProgram failed"); fatalError()
+            XCTFail("unexpected error"); fatalError()
         }
         return program
     }

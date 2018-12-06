@@ -5,7 +5,7 @@
 //  Created by Yusuke Kita on 11/15/18.
 //
 
-import Token
+import Syntax
 
 typealias Position = Int
 

@@ -1,6 +1,6 @@
 //
 //  Constants.swift
-//  Constants
+//  Syntax
 //
 //  Created by Yusuke Kita on 11/15/18.
 //

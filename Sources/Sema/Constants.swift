@@ -1,11 +1,11 @@
 //
 //  Constants.swift
-//  Constants
+//  Sema
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
-import Token
+import Syntax
 
 enum PrecedenceKind: UInt {
     case lowest

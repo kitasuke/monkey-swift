@@ -14,33 +14,33 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "monkey-swift",
-            dependencies: ["Token", "Lexer", "Parser", "Ast", "Repl"]),
+            dependencies: ["Syntax", "Lexer", "Sema", "AST", "Repl"]),
         .target(
-            name: "Token",
+            name: "Syntax",
             dependencies: []),
         .target(
             name: "Lexer",
-            dependencies: ["Token"]),
+            dependencies: ["Syntax"]),
         .target(
-            name: "Ast",
-            dependencies: ["Token", "Lexer"]),
+            name: "Sema",
+            dependencies: ["Syntax", "Lexer"]),
         .target(
-            name: "Parser",
-            dependencies: ["Token", "Lexer", "Ast"]),
+            name: "AST",
+            dependencies: ["Syntax", "Lexer", "Sema"]),
         .target(
             name: "Repl",
-            dependencies: ["Token", "Lexer"]),
+            dependencies: ["Syntax", "Lexer", "Sema"]),
         .testTarget(
             name: "monkey-swiftTests",
             dependencies: ["monkey-swift"]),
         .testTarget(
             name: "LexerTests",
-            dependencies: ["Token", "Lexer"]),
+            dependencies: ["Syntax", "Lexer"]),
         .testTarget(
-            name: "ParserTests",
-            dependencies: ["Token", "Lexer", "Ast", "Parser"]),
+            name: "SemaTests",
+            dependencies: ["Syntax", "Lexer", "Sema"]),
         .testTarget(
-            name: "AstTests",
-            dependencies: ["Token", "Ast"]),
+            name: "ASTTests",
+            dependencies: ["Syntax", "Lexer", "Sema", "AST"]),
     ]
 )

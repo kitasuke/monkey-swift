@@ -1,20 +1,20 @@
 //
 //  ParserError.swift
-//  ParserError
+//  Sema
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
 import Foundation
-import Token
+import Syntax
 import Lexer
 
-public enum ParserError: Error {
+public enum ParserError: Error, CustomStringConvertible {
     case noValidStatements
     case peekTokenNotMatch(expected: TokenType, actual: TokenType)
     case expressionParsingFailed(token: Token)
 
-    public var message: String {
+    public var description: String {
         switch self {
         case .noValidStatements:
             return "found no valid statements"

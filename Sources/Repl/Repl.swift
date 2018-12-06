@@ -5,9 +5,9 @@
 //  Created by Yusuke Kita on 11/15/18.
 //
 
-import Token
+import Syntax
 import Lexer
-import Parser
+import Sema
 
 public struct Repl {
     
@@ -15,10 +15,10 @@ public struct Repl {
         let lexer = Lexer(input: input)
         var parser = Parser(lexer: lexer)
         do {
-            let program = try parser.parseProgram()
+            let program = try parser.parse()
             print(program.description)
-        } catch let error as ParserError {
-            print(error.message)
+        } catch let error as Error & CustomStringConvertible {
+            print(error.description)
         } catch let error {
             print(error.localizedDescription)
         }

@@ -1,13 +1,13 @@
 //
 //  AstTests.swift
-//  AstTests
+//  SemaTests
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
 
 import XCTest
-import Token
-import Ast
+import Syntax
+import Sema
 
 final class AstTests: XCTestCase {
     func test_nextDescription() {
