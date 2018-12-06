@@ -10,9 +10,9 @@ import Sema
 
 public struct Evaluator {
     
-    let `true` = Boolean(value: true)
-    let `false` = Boolean(value: false)
-    let null = Null()
+    private let `true` = Boolean(value: true)
+    private let `false` = Boolean(value: false)
+    private let null = Null()
     
     public init() {}
     
@@ -24,7 +24,11 @@ public struct Evaluator {
             return try evaluate(astNode: node.expression)
         case let node as PrefixExpression:
             let right = try evaluate(astNode: node.right)
-            return evaluatePrefixExpression(operator: node.operator, object: right)
+            return evaluatePrefixExpression(operator: node.operator, right: right)
+        case let node as InfixExpression:
+            let left = try evaluate(astNode: node.left)
+            let right = try evaluate(astNode: node.right)
+            return try evaluateInfixExpression(operator: node.operator, left: left, right: right)
         case let node as IntegerLiteral:
             return Integer(value: node.value)
         case let node as Sema.Boolean:
@@ -41,12 +45,12 @@ public struct Evaluator {
         return object
     }
     
-    private func evaluatePrefixExpression(operator: String, object: Object) -> Object {
+    private func evaluatePrefixExpression(operator: String, right: Object) -> Object {
         switch `operator` {
-        case String(TokenSymbol.bang.rawValue):
-            return evaluateBangPrefixOperatorExpression(object)
-        case String(TokenSymbol.minus.rawValue):
-            return evaluateMinusPrefixOperatorExpression(object)
+        case Token(type: .bang).literal:
+            return evaluateBangPrefixOperatorExpression(right)
+        case Token(type: .minus).literal:
+            return evaluateMinusPrefixOperatorExpression(right)
         default:
             return null
         }
@@ -72,6 +76,44 @@ public struct Evaluator {
         }
         
         return Integer(value: -integer.value)
+    }
+    
+    private func evaluateInfixExpression(operator: String, left: Object, right: Object) throws -> Object {
+        switch (left, right) {
+        case (let leftInteger as Integer, let rightInteger as Integer):
+            return try evaluateIntegerInfixExpression(left: leftInteger, operator: `operator`, right: rightInteger)
+        case (let leftBoolean as Boolean, let rightBoolean as Boolean) where `operator` == Token(type: .equal).literal:
+            return toBooleanObject(from: leftBoolean.value == rightBoolean.value)
+        case (let leftBoolean as Boolean, let rightBoolean as Boolean) where `operator` == Token(type: .notEqual).literal:
+            return toBooleanObject(from: leftBoolean.value != rightBoolean.value)
+        case _ where left.type != right.type:
+            throw EvaluatorError.typeMissMatch(left: left.type, operator: `operator`, right: right.type)
+        default:
+            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+        }
+    }
+    
+    private func evaluateIntegerInfixExpression(left: Integer, operator: String, right: Integer) throws -> Object {
+        switch `operator` {
+        case Token(type: .plus).literal:
+            return Integer(value: left.value + right.value)
+        case Token(type: .minus).literal:
+            return Integer(value: left.value - right.value)
+        case Token(type: .asterisk).literal:
+            return Integer(value: left.value * right.value)
+        case Token(type: .slash).literal:
+            return Integer(value: left.value / right.value)
+        case Token(type: .lessThan).literal:
+            return toBooleanObject(from: left.value < right.value)
+        case Token(type: .greaterThan).literal:
+            return toBooleanObject(from: left.value > right.value)
+        case Token(type: .equal).literal:
+            return toBooleanObject(from: left.value == right.value)
+        case Token(type: .notEqual).literal:
+            return toBooleanObject(from: left.value != right.value)
+        default:
+            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+        }
     }
     
     private func toBooleanObject(from bool: Bool) -> Boolean {
