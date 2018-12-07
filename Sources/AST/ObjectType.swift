@@ -1,5 +1,5 @@
 //
-//  Constants.swift
+//  ObjectType.swift
 //  AST
 //
 //  Created by Yusuke Kita on 12/04/18.

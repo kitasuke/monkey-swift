@@ -1,5 +1,5 @@
 //
-//  Constants.swift
+//  PrecedenceKind.swift
 //  Sema
 //
 //  Created by Yusuke Kita on 11/15/18.
