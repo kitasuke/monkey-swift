@@ -330,7 +330,7 @@ final class ParserTests: XCTestCase {
     
     private func makeProgram(from input: String) -> Program {
         let lexer = Lexer(input: input)
-        var parser = Parser(lexer: lexer)
+        let parser = Parser(lexer: lexer)
         
         let program: Program
         do {

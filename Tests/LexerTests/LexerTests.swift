@@ -33,7 +33,7 @@ final class LexerTests: XCTestCase {
             .makeNumber(number: "5"), .init(type: .lessThan), .makeNumber(number: "10"), .init(type: .greaterThan), .makeNumber(number: "5"), .init(type: .semicolon)
         ]
 
-        var lexer = Lexer(input: input)
+        let lexer = Lexer(input: input)
         expectedTokens.forEach { expectedToken in
             let token = lexer.nextToken()
             XCTAssertTrue(token == expectedToken, "tokenType wrong. expected=\(expectedToken), got=\(token)")

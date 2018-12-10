@@ -9,7 +9,7 @@ import Foundation
 import Syntax
 import Lexer
 
-public struct Parser {
+public class Parser {
     var lexer: Lexer
     var currentToken = Token(type: .unknown)
     var peekToken = Token(type: .unknown)
@@ -28,7 +28,7 @@ public struct Parser {
         setNextToken()
     }
     
-    public mutating func parse() throws -> Program {
+    public func parse() throws -> Program {
         var statements: [Statement] = []
         
         while currentToken.type != .eof {
@@ -46,7 +46,7 @@ public struct Parser {
         return Program(statements: statements)
     }
     
-    private mutating func parseStatement() throws -> Statement? {
+    private func parseStatement() throws -> Statement? {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
@@ -54,7 +54,7 @@ public struct Parser {
         }
     }
     
-    private mutating func parseLetStatement() throws -> LetStatement {
+    private func parseLetStatement() throws -> LetStatement {
         // let
         let letToken = currentToken
         
@@ -79,7 +79,7 @@ public struct Parser {
         return LetStatement(token: letToken, name: name, value: value)
     }
     
-    private mutating func parseReturnStatement() throws -> ReturnStatement {
+    private func parseReturnStatement() throws -> ReturnStatement {
         // return
         let returnToken = currentToken
         
@@ -96,7 +96,7 @@ public struct Parser {
         return ReturnStatement(token: returnToken, value: value)
     }
     
-    private mutating func parseExpressionStatement() throws -> ExpressionStatement? {
+    private func parseExpressionStatement() throws -> ExpressionStatement? {
         let expressionToken = currentToken
         
         guard let expression = try parseExpression() else {
@@ -110,7 +110,7 @@ public struct Parser {
         return ExpressionStatement(token: expressionToken, expression: expression)
     }
     
-    private mutating func parseBlockStatement() throws -> BlockStatement {
+    private func parseBlockStatement() throws -> BlockStatement {
         // x; x = y;...
         let blockToken = currentToken
         setNextToken()
@@ -127,7 +127,7 @@ public struct Parser {
         return BlockStatement(token: blockToken, statements: statements)
     }
     
-    private mutating func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
+    private func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
         var expression: Expression
         guard let leftExpression = try parsePrefixOperator() else {
             return nil
@@ -146,7 +146,7 @@ public struct Parser {
         return expression
     }
     
-    private mutating func parsePrefixExpression() throws -> PrefixExpression {
+    private func parsePrefixExpression() throws -> PrefixExpression {
         // !
         let prefixToken = currentToken
         setNextToken()
@@ -158,7 +158,7 @@ public struct Parser {
         return PrefixExpression(token: currentToken, operator: prefixToken.literal, right: right)
     }
     
-    private mutating func parseGroupedExpression() throws -> Expression {
+    private func parseGroupedExpression() throws -> Expression {
         // (
         setNextToken()
         
@@ -173,7 +173,7 @@ public struct Parser {
         return expression
     }
     
-    private mutating func parseIfExpression() throws -> IfExpression {
+    private func parseIfExpression() throws -> IfExpression {
         // if
         let ifToken = currentToken
         
@@ -210,12 +210,12 @@ public struct Parser {
         return IfExpression(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
     }
     
-    private mutating func parseCallExpression(with function: Expression) throws -> CallExpression {
+    private func parseCallExpression(with function: Expression) throws -> CallExpression {
         let arguments = try parseCallArguments()
         return CallExpression(token: currentToken, function: function, arguments: arguments)
     }
     
-    private mutating func parseCallArguments() throws -> [Expression] {
+    private func parseCallArguments() throws -> [Expression] {
         var arguments: [Expression] = []
 
         // (
@@ -248,7 +248,7 @@ public struct Parser {
         return arguments
     }
     
-    private mutating func parsePrefixOperator() throws -> Expression? {
+    private func parsePrefixOperator() throws -> Expression? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
@@ -261,7 +261,7 @@ public struct Parser {
         }
     }
     
-    private mutating func parseInfixExpression(with left: Expression) throws -> InfixExpression {
+    private func parseInfixExpression(with left: Expression) throws -> InfixExpression {
         // +
         let infixToken = currentToken
         
@@ -275,7 +275,7 @@ public struct Parser {
         return InfixExpression(token: infixToken, left: left, right: right)
     }
     
-    private mutating func parseInfixOperator(with left: Expression) throws -> Expression? {
+    private func parseInfixOperator(with left: Expression) throws -> Expression? {
         switch peekToken.type {
         case .plus, .minus, .slash, .asterisk, .equal, .notEqual, .lessThan, .greaterThan:
             setNextToken()
@@ -291,7 +291,7 @@ public struct Parser {
         return Identifier(token: currentToken)
     }
     
-    private mutating func parseFunctionLiteral() throws -> FunctionLiteral {
+    private func parseFunctionLiteral() throws -> FunctionLiteral {
         let functionToken = currentToken
         
         // fn
@@ -307,7 +307,7 @@ public struct Parser {
         return FunctionLiteral(token: functionToken, parameters: parameters, body: body)
     }
     
-    private mutating func parseFunctionParameters() throws -> [Identifier] {
+    private func parseFunctionParameters() throws -> [Identifier] {
         var identifiers: [Identifier] = []
 
         // (
@@ -343,12 +343,12 @@ public struct Parser {
         return Boolean(token: currentToken)
     }
 
-    private mutating func setNextToken() {
+    private func setNextToken() {
         currentToken = peekToken
         peekToken = lexer.nextToken()
     }
     
-    private mutating func setNextToken(expects tokenType: TokenType) throws {
+    private func setNextToken(expects tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
             throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekToken.type)
         }

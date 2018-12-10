@@ -9,7 +9,7 @@ import Syntax
 
 typealias Position = Int
 
-public struct Lexer {
+public class Lexer {
     let input: String
     var currentPosition: Position = 0 // current position in input
     var readPosition: Position = 0 // current read position in input
@@ -21,7 +21,7 @@ public struct Lexer {
         setNextCharacter()
     }
     
-    public mutating func nextToken() -> Token {
+    public func nextToken() -> Token {
         let tokenType: TokenType
         
         skipWhitespace()
@@ -75,7 +75,7 @@ public struct Lexer {
         return .init(type: tokenType)
     }
     
-    private mutating func setNextCharacter() {
+    private func setNextCharacter() {
         if readPosition < input.count {
             let index = input.index(input.startIndex, offsetBy: readPosition)
             character = input[index]
@@ -86,7 +86,7 @@ public struct Lexer {
         readPosition += 1
     }
     
-    private mutating func readCharacter(while condition: ((Character) -> Bool)) -> String {
+    private func readCharacter(while condition: ((Character) -> Bool)) -> String {
         let position = currentPosition
 
         while let character = self.character, condition(character) {
@@ -97,11 +97,11 @@ public struct Lexer {
         return String(input[startIndex..<endIndex])
     }
     
-    private mutating func readIdentifier() -> String {
+    private func readIdentifier() -> String {
         return readCharacter(while: isLetter)
     }
     
-    private mutating func readNumber() -> String {
+    private func readNumber() -> String {
         return readCharacter(while: isDigit)
     }
     
@@ -113,7 +113,7 @@ public struct Lexer {
         return input[index]
     }
     
-    private mutating func skipWhitespace() {
+    private func skipWhitespace() {
         while character == " " ||
             character == "\t" ||
             character == "\n" ||

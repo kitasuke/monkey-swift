@@ -14,7 +14,7 @@ public struct Repl {
     
     public static func start(with input: String) {
         let lexer = Lexer(input: input)
-        var parser = Parser(lexer: lexer)
+        let parser = Parser(lexer: lexer)
         do {
             let program = try parser.parse()
 

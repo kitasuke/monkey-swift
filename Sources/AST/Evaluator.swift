@@ -8,7 +8,7 @@
 import Syntax
 import Sema
 
-public struct Evaluator {
+public class Evaluator {
     
     private let `true` = Boolean(value: true)
     private let `false` = Boolean(value: false)
