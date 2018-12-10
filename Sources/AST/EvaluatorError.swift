@@ -17,7 +17,7 @@ public enum EvaluatorError: Error, CustomStringConvertible {
     public var description: String {
         switch self {
         case .unknownNode(let node):
-            return "unknown node: \(node.description)"
+            return "unknown identifier: \(node.description)"
         case .noValidExpression(let statements):
             return "no valid expression from \(statements.map { $0.description })"
         case .typeMissMatch(let left, let `operator`, let right):

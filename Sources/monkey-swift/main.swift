@@ -6,7 +6,8 @@ private let prompt = ">> "
 print("Hello! This is the Monkey programming language!")
 print("Feel free to type in commands")
 
+let repl = Repl()
 while(true) {
     print(prompt, terminator: "")
-    Repl.start(with: readLine() ?? "")
+    repl.start(with: readLine() ?? "")
 }

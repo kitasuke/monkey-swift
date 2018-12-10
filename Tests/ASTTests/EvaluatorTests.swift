@@ -122,6 +122,20 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_letStatements() {
+        let tests: [(input: String, expected: Int64)] = [
+            (input: "let a = 5; a;", expected: 5),
+            (input: "let a = 5 * 5; a;", expected: 25),
+            (input: "let a = 5; let b = a; b;", expected: 5),
+            (input: "let a = 5; let b = a; let c = a + b + 5; c;", expected: 15),
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testIntegerObject(object, expected: $0.expected)
+        }
+    }
+    
     func test_errorHandling() {
         let tests: [(input: String, expected: EvaluatorError)] = [
             (input: "5 + true;", expected: EvaluatorError.typeMissMatch(left: .integer, operator: "+", right: .boolean)),
@@ -140,15 +154,19 @@ final class EvaluatorTests: XCTestCase {
                     }
                 """,
              expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
+            (input: "foobar", expected: EvaluatorError.unknownNode(Identifier(token: .makeIdentifier(identifier: "foobar")))),
         ]
         
         tests.forEach {
             let program = makeProgram(from: $0.input)
             do {
+                let environment = Environment()
                 let evaluator = Evaluator()
-                _ = try evaluator.evaluate(astNode: program)
+                _ = try evaluator.evaluate(astNode: program, with: environment)
                 XCTFail("shouldn't reach here")
             } catch let error as EvaluatorError {
+                print(error)
+                print($0.expected)
                 XCTAssertTrue(error == $0.expected, "error wrong. got=\(error.description), want=\($0.expected)")
             } catch {
                 XCTFail("unknown error"); fatalError()
@@ -196,8 +214,9 @@ final class EvaluatorTests: XCTestCase {
     private func makeObject(from program: Program) -> Object {
         let object: Object
         do {
+            let environment = Environment()
             let evaluator = Evaluator()
-            object = try evaluator.evaluate(astNode: program)
+            object = try evaluator.evaluate(astNode: program, with: environment)
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {
@@ -224,6 +243,8 @@ extension EvaluatorError: Equatable {
         case (.unknownOperator(_, let lhsOperator, let lhsRight),
               .unknownOperator(_, let rhsOperator, let rhsRight)):
             return (lhsOperator == rhsOperator) && (lhsRight == rhsRight)
+        case (.unknownNode(let lhsNode), .unknownNode(let rhsNode)):
+            return lhsNode.description == rhsNode.description
         default:
             // return false because there is no need to test other errors
             return false

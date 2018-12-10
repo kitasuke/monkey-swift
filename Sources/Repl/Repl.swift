@@ -12,14 +12,20 @@ import AST
 
 public struct Repl {
     
-    public static func start(with input: String) {
+    let environment: Environment
+    
+    public init() {
+        environment = Environment()
+    }
+    
+    public func start(with input: String) {
         let lexer = Lexer(input: input)
         let parser = Parser(lexer: lexer)
         do {
             let program = try parser.parse()
 
             let evaluator = Evaluator()
-            let object = try evaluator.evaluate(astNode: program)
+            let object = try evaluator.evaluate(astNode: program, with: environment)
             print(object.inspect())
         } catch let error as Error & CustomStringConvertible {
             print(error.description)

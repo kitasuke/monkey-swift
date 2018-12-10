@@ -5,7 +5,7 @@
 //  Created by Yusuke Kita on 11/15/18.
 //
 
-public enum TokenType: Equatable {
+public enum TokenType {
     case unknown, illegal, eof
 
     // Identifiers + literals
@@ -67,7 +67,9 @@ public enum TokenType: Equatable {
     }
 }
 
-public struct Token: Equatable {
+extension TokenType: Hashable {}
+
+public struct Token {
     public let type: TokenType
     public let literal: String
     
@@ -124,3 +126,5 @@ public struct Token: Equatable {
         return Token(type: type, literal: number)
     }
 }
+
+extension Token: Hashable {}

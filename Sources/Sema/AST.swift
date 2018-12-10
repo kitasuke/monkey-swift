@@ -240,6 +240,12 @@ extension Identifier: Expression {
     }
 }
 
+extension Identifier: Hashable {
+    public var hashValue: Int {
+        return token.hashValue ^ value.hashValue
+    }
+}
+
 public struct FunctionLiteral {
     public let token: Token
     public let parameters: [Identifier]
