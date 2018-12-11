@@ -7,26 +7,26 @@
 
 import Sema
 
-protocol EnvironmentType {
-    var storedObjects: [Identifier: Object] { get set }
+public protocol EnvironmentType {
+    var storedObjects: [Identifier: Object] { get }
     
-    func object(of identifier: Identifier) -> Object?
-    func set(_ object: Object, with identifier: Identifier)
+    func object(for identifier: Identifier) -> Object?
+    func set(_ object: Object, for identifier: Identifier)
 }
 
 public class Environment: EnvironmentType {
     
-    var storedObjects: [Identifier: Object]
+    public var storedObjects: [Identifier: Object]
     
     public init() {
         storedObjects = [:]
     }
     
-    public func object(of identifier: Identifier) -> Object? {
+    public func object(for identifier: Identifier) -> Object? {
         return storedObjects[identifier]
     }
     
-    public func set(_ object: Object, with identifier: Identifier) {
+    public func set(_ object: Object, for identifier: Identifier) {
         storedObjects[identifier] = object
     }
 }
