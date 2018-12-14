@@ -10,4 +10,5 @@ public enum ObjectType: String {
     case boolean
     case null
     case `return`
+    case function
 }

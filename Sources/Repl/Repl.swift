@@ -24,8 +24,8 @@ public struct Repl {
         do {
             let program = try parser.parse()
 
-            let evaluator = Evaluator(environment: environment)
-            let object = try evaluator.evaluate(astNode: program)
+            let evaluator = Evaluator()
+            let object = try evaluator.evaluate(astNode: program, with: environment)
             print(object.inspect())
         } catch let error as Error & CustomStringConvertible {
             print(error.description)

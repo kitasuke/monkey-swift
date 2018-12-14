@@ -5,6 +5,8 @@
 //  Created by Yusuke Kita on 12/04/18.
 //
 
+import Sema
+
 public protocol Object {
     var type: ObjectType { get }
     func inspect() -> String
@@ -73,5 +75,28 @@ extension ReturnValue: Object {
     
     public func inspect() -> String {
         return value.inspect()
+    }
+}
+
+public struct Function {
+    public let parameters: [Identifier]
+    public let body: BlockStatement
+    public let environment: EnvironmentType
+    
+    public init(parameters: [Identifier], body: BlockStatement, environment: EnvironmentType) {
+        self.parameters = parameters
+        self.body = body
+        self.environment = environment
+    }
+}
+
+extension Function: Object {
+    public var type: ObjectType {
+        return .function
+    }
+    
+    public func inspect() -> String {
+        let params = parameters.map { $0.description }.joined(separator: ", ")
+        return "fn(\(params)) {\n\(body.description)\n}"
     }
 }

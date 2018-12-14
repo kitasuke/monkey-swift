@@ -136,6 +136,33 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    func test_functionObject() {
+        let input = "fn(x) { x + 2; };"
+        
+        let object = makeObject(from: input)
+        
+        guard let function = object as? Function else {
+            XCTFail("object not \(FunctionLiteral.self). got=\(type(of: object))")
+            fatalError()
+        }
+        
+        XCTAssertTrue(function.parameters.count == 1, "function.parameters.count not 1. got=\(function.parameters.count)")
+        XCTAssertTrue(function.parameters[0].description == "x", "parameter.description not 'x'. got=\(function.parameters[0].description)")
+        XCTAssertTrue(function.body.description == "(x + 2)", "body.description not `(x + 2)`. got=\(function.body.description)")
+    }
+    
+    func test_functionApplication() {
+        let tests: [(input: String, expected: Int64)] = [
+            (input: "let identity = fn(x) { x; }; identity(5);", expected: 5),
+            (input: "let identity = fn(x) { return 10; x; }; identity(5);", expected: 10),
+        ]
+
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testIntegerObject(object, expected: $0.expected)
+        }
+    }
+    
     func test_errorHandling() {
         let tests: [(input: String, expected: EvaluatorError)] = [
             (input: "5 + true;", expected: EvaluatorError.typeMissMatch(left: .integer, operator: "+", right: .boolean)),
@@ -161,8 +188,8 @@ final class EvaluatorTests: XCTestCase {
             let program = makeProgram(from: $0.input)
             do {
                 let environment = Environment()
-                let evaluator = Evaluator(environment: environment)
-                _ = try evaluator.evaluate(astNode: program)
+                let evaluator = Evaluator()
+                _ = try evaluator.evaluate(astNode: program, with: environment)
                 XCTFail("shouldn't reach here")
             } catch let error as EvaluatorError {
                 print(error)
@@ -215,8 +242,8 @@ final class EvaluatorTests: XCTestCase {
         let object: Object
         do {
             let environment = Environment()
-            let evaluator = Evaluator(environment: environment)
-            object = try evaluator.evaluate(astNode: program)
+            let evaluator = Evaluator()
+            object = try evaluator.evaluate(astNode: program, with: environment)
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {

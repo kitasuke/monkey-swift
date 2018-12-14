@@ -13,6 +13,7 @@ public enum EvaluatorError: Error, CustomStringConvertible {
     case noValidExpression([Statement])
     case typeMissMatch(left: ObjectType, operator: String, right: ObjectType)
     case unknownOperator(left: ObjectType?, operator: String, right: ObjectType)
+    case notFunction(object: Object)
 
     public var description: String {
         switch self {
@@ -26,6 +27,8 @@ public enum EvaluatorError: Error, CustomStringConvertible {
             return "unknown operator: \(left) \(`operator`) \(right)"
         case .unknownOperator(_, let `operator`, let right):
             return "unknown operator: \(`operator`)\(right)"
+        case .notFunction(let object):
+            return "not a function: \(object.type)"
         }
     }
 }
