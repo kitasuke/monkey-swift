@@ -44,9 +44,11 @@ final class EnvironmentTests: XCTestCase {
 }
 
 class MockEnvironment: EnvironmentType {
+    let outer: EnvironmentType?
     var storedObjects: [Identifier : Object]
     
-    init(objects: [Identifier: Object]) {
+    init(objects: [Identifier: Object], outer: EnvironmentType? = nil) {
+        self.outer = outer
         storedObjects = objects
     }
     
