@@ -1,6 +1,6 @@
 //
-//  Repl.swift
-//  Repl
+//  REPL.swift
+//  REPL
 //
 //  Created by Yusuke Kita on 11/15/18.
 //
@@ -10,7 +10,7 @@ import Lexer
 import Sema
 import AST
 
-public struct Repl {
+public struct REPL {
     
     let environment: Environment
     
