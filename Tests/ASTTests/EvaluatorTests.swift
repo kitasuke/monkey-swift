@@ -189,7 +189,7 @@ final class EvaluatorTests: XCTestCase {
             do {
                 let environment = Environment()
                 let evaluator = Evaluator()
-                _ = try evaluator.evaluate(astNode: program, with: environment)
+                _ = try evaluator.evaluate(node: program, with: environment)
                 XCTFail("shouldn't reach here")
             } catch let error as EvaluatorError {
                 print(error)
@@ -243,7 +243,7 @@ final class EvaluatorTests: XCTestCase {
         do {
             let environment = Environment()
             let evaluator = Evaluator()
-            object = try evaluator.evaluate(astNode: program, with: environment)
+            object = try evaluator.evaluate(node: program, with: environment)
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {

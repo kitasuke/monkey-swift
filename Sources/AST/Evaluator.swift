@@ -16,51 +16,51 @@ public class Evaluator {
     
     public init() {}
     
-    public func evaluate(astNode: Node, with environment: EnvironmentType) throws -> Object {
-        switch astNode {
-        case let node as Program:
-            return try evaluateProgram(node, with: environment)
-        case let node as ExpressionStatement:
-            return try evaluate(astNode: node.expression, with: environment)
-        case let node as BlockStatement:
-            return try evaluateBlockStatement(node, with: environment)
-        case let node as ReturnStatement:
-            let value = try evaluate(astNode: node.value, with: environment)
+    public func evaluate(node: Node, with environment: EnvironmentType) throws -> Object {
+        switch node {
+        case let program as Program:
+            return try evaluate(program: program, with: environment)
+        case let expressionStatement as ExpressionStatement:
+            return try evaluate(node: expressionStatement.expression, with: environment)
+        case let blockStatement as BlockStatement:
+            return try evaluate(blockStatement: blockStatement, with: environment)
+        case let returnStatement as ReturnStatement:
+            let value = try evaluate(node: returnStatement.value, with: environment)
             return ReturnValue(value: value)
-        case let node as LetStatement:
-            let value = try evaluate(astNode: node.value, with: environment)
-            environment.set(value, for: node.name)
+        case let letStatement as LetStatement:
+            let value = try evaluate(node: letStatement.value, with: environment)
+            environment.set(value, for: letStatement.name)
             return value
-        case let node as PrefixExpression:
-            let right = try evaluate(astNode: node.right, with: environment)
-            return try evaluatePrefixExpression(operator: node.operator, right: right)
-        case let node as InfixExpression:
-            let left = try evaluate(astNode: node.left, with: environment)
-            let right = try evaluate(astNode: node.right, with: environment)
-            return try evaluateInfixExpression(operator: node.operator, left: left, right: right)
-        case let node as IfExpression:
-            return try evaluateIfExpression(node, with: environment)
-        case let node as CallExpression:
-            let function = try evaluate(astNode: node.function, with: environment)
-            let arguments = try evaluateExpressions(node.arguments, with: environment)
-            return try applyFunction(function, arguments: arguments)
-        case let node as Identifier:
-            return try evaluateIdentifier(node, with: environment)
-        case let node as FunctionLiteral:
-            return Function(parameters: node.parameters, body: node.body, environment: environment)
-        case let node as IntegerLiteral:
-            return Integer(value: node.value)
-        case let node as Sema.Boolean:
-            return toBooleanObject(from: node.value)
+        case let prefixExpression as PrefixExpression:
+            let right = try evaluate(node: prefixExpression.right, with: environment)
+            return try evaluatePrefixExpression(operator: prefixExpression.operator, right: right)
+        case let infixExpression as InfixExpression:
+            let left = try evaluate(node: infixExpression.left, with: environment)
+            let right = try evaluate(node: infixExpression.right, with: environment)
+            return try evaluateInfixExpression(operator: infixExpression.operator, left: left, right: right)
+        case let ifExpression as IfExpression:
+            return try evaluate(ifExpression: ifExpression, with: environment)
+        case let callExpression as CallExpression:
+            let function = try evaluate(node: callExpression.function, with: environment)
+            let arguments = try evaluate(expressions: callExpression.arguments, with: environment)
+            return try apply(function: function, arguments: arguments)
+        case let identifier as Identifier:
+            return try evaluate(identifier: identifier, with: environment)
+        case let functionLiteral as FunctionLiteral:
+            return Function(parameters: functionLiteral.parameters, body: functionLiteral.body, environment: environment)
+        case let integerLiteral as IntegerLiteral:
+            return Integer(value: integerLiteral.value)
+        case let boolean as Sema.Boolean:
+            return toBooleanObject(from: boolean.value)
         default:
-            throw EvaluatorError.unknownNode(astNode)
+            throw EvaluatorError.unknownNode(node)
         }
     }
     
-    private func evaluateProgram(_ program: Program, with environment: EnvironmentType) throws -> Object {
+    private func evaluate(program: Program, with environment: EnvironmentType) throws -> Object {
         var object: Object?
         for statement in program.statements {
-            object = try evaluate(astNode: statement, with: environment)
+            object = try evaluate(node: statement, with: environment)
             
             if let returnValue = object as? ReturnValue {
                 return returnValue.value
@@ -73,10 +73,10 @@ public class Evaluator {
         return result
     }
     
-    private func evaluateBlockStatement(_ statement: BlockStatement, with environment: EnvironmentType) throws -> Object {
+    private func evaluate(blockStatement: BlockStatement, with environment: EnvironmentType) throws -> Object {
         var object: Object?
-        for statement in statement.statements {
-            object = try evaluate(astNode: statement, with: environment)
+        for statement in blockStatement.statements {
+            object = try evaluate(node: statement, with: environment)
             
             if let returnValue = object as? ReturnValue {
                 return returnValue
@@ -84,7 +84,7 @@ public class Evaluator {
         }
         
         guard let result = object else {
-            throw EvaluatorError.noValidExpression(statement.statements)
+            throw EvaluatorError.noValidExpression(blockStatement.statements)
         }
         return result
     }
@@ -92,15 +92,15 @@ public class Evaluator {
     private func evaluatePrefixExpression(operator: String, right: Object) throws -> Object {
         switch `operator` {
         case Token(type: .bang).literal:
-            return evaluateBangPrefixOperatorExpression(right)
+            return evaluate(bangPrefixOperatorExpression: right)
         case Token(type: .minus).literal:
-            return try evaluateMinusPrefixOperatorExpression(right)
+            return try evaluate(minusPrefixOperatorExpression: right)
         default:
             throw EvaluatorError.unknownOperator(left: nil, operator: `operator`, right: right.type)
         }
     }
     
-    private func evaluateBangPrefixOperatorExpression(_ object: Object) -> Object {
+    private func evaluate(bangPrefixOperatorExpression object: Object) -> Object {
         switch object {
         case let boolean as Boolean where boolean.value:
             return `false`
@@ -113,7 +113,7 @@ public class Evaluator {
         }
     }
     
-    private func evaluateMinusPrefixOperatorExpression(_ object: Object) throws -> Object {
+    private func evaluate(minusPrefixOperatorExpression object: Object) throws -> Object {
         guard object.type == .integer,
             let integer = object as? Integer else {
             throw EvaluatorError.unknownOperator(left: nil, operator: Token(type: .minus).literal, right: object.type)
@@ -160,8 +160,8 @@ public class Evaluator {
         }
     }
     
-    private func evaluateIfExpression(_ expression: IfExpression, with environment: EnvironmentType) throws -> Object {
-        let condition = try evaluate(astNode: expression.condition, with: environment)
+    private func evaluate(ifExpression: IfExpression, with environment: EnvironmentType) throws -> Object {
+        let condition = try evaluate(node: ifExpression.condition, with: environment)
         
         let isTruthy: (Object) -> Bool = { object in
             switch object {
@@ -173,19 +173,19 @@ public class Evaluator {
         }
         
         if isTruthy(condition) {
-            return try evaluate(astNode: expression.consequence, with: environment)
-        } else if let alternative = expression.alternative {
-            return try evaluate(astNode: alternative, with: environment)
+            return try evaluate(node: ifExpression.consequence, with: environment)
+        } else if let alternative = ifExpression.alternative {
+            return try evaluate(node: alternative, with: environment)
         } else {
             return null
         }
     }
     
-    private func evaluateExpressions(_ expressions: [Expression], with environment: EnvironmentType) throws -> [Object] {
-        return try expressions.map { try evaluate(astNode: $0, with: environment) }
+    private func evaluate(expressions: [Expression], with environment: EnvironmentType) throws -> [Object] {
+        return try expressions.map { try evaluate(node: $0, with: environment) }
     }
     
-    private func evaluateIdentifier(_ identifier: Identifier, with environment: EnvironmentType) throws -> Object {
+    private func evaluate(identifier: Identifier, with environment: EnvironmentType) throws -> Object {
         guard let value = environment.object(for: identifier) else {
             throw EvaluatorError.unknownNode(identifier)
         }
@@ -193,17 +193,17 @@ public class Evaluator {
         return value
     }
     
-    private func applyFunction(_ object: Object, arguments: [Object]) throws -> Object {
+    private func apply(function object: Object, arguments: [Object]) throws -> Object {
         guard let function = object as? Function else {
             throw EvaluatorError.notFunction(object: object)
         }
         
-        let extendedEnvironment = extendedFunctionEnvironment(function, arguments: arguments)
-        let value = try evaluate(astNode: function.body, with: extendedEnvironment)
-        return unwrapReturnValue(value)
+        let environment = extendedEnvironment(from: function, arguments: arguments)
+        let value = try evaluate(node: function.body, with: environment)
+        return unwrap(returnValue: value)
     }
     
-    private func extendedFunctionEnvironment(_ function: Function, arguments: [Object]) -> EnvironmentType {
+    private func extendedEnvironment(from function: Function, arguments: [Object]) -> EnvironmentType {
         let environment = Environment(outer: function.environment)
         
         for (index, parameter) in function.parameters.enumerated() {
@@ -212,7 +212,7 @@ public class Evaluator {
         return environment
     }
     
-    private func unwrapReturnValue(_ object: Object) -> Object {
+    private func unwrap(returnValue object: Object) -> Object {
         guard let returnValue = object as? ReturnValue else {
             return object
         }
