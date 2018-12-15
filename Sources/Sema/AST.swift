@@ -241,8 +241,9 @@ extension Identifier: Expression {
 }
 
 extension Identifier: Hashable {
-    public var hashValue: Int {
-        return token.hashValue ^ value.hashValue
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(token)
+        hasher.combine(value)
     }
 }
 
