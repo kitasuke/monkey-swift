@@ -5,3 +5,7 @@
 
 1. Run `swift build` in your terminal
 2. Run `.build/debug/monkey-swift`
+
+## Xcode project
+
+Run `swift package generate-xcodeproj` to generate xcode project
