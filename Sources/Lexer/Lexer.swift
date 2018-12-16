@@ -27,41 +27,41 @@ public final class Lexer {
         skipWhitespace()
         
         switch character {
-        case TokenSymbol.equal.rawValue where peekCharacter() == TokenSymbol.equal.rawValue:
+        case "=" where peekCharacter() == "=":
             setNextCharacter()
             tokenType = .equal
-        case TokenSymbol.equal.rawValue:
+        case "=":
             tokenType = .assign
-        case TokenSymbol.plus.rawValue:
+        case "+":
             tokenType = .plus
-        case TokenSymbol.minus.rawValue:
+        case "-":
             tokenType = .minus
-        case TokenSymbol.bang.rawValue where peekCharacter() == TokenSymbol.equal.rawValue:
+        case "!" where peekCharacter() == "=":
             setNextCharacter()
             tokenType = .notEqual
-        case TokenSymbol.bang.rawValue:
+        case "!":
             tokenType = .bang
-        case TokenSymbol.asterisk.rawValue:
+        case "*":
             tokenType = .asterisk
-        case TokenSymbol.slash.rawValue:
+        case "/":
             tokenType = .slash
-        case TokenSymbol.comma.rawValue:
+        case ",":
             tokenType = .comma
-        case TokenSymbol.semicolon.rawValue:
+        case ";":
             tokenType = .semicolon
-        case TokenSymbol.lessThan.rawValue:
+        case "<":
             tokenType = .lessThan
-        case TokenSymbol.greaterThan.rawValue:
+        case ">":
             tokenType = .greaterThan
-        case TokenSymbol.leftParen.rawValue:
+        case "(":
             tokenType = .leftParen
-        case TokenSymbol.rightParen.rawValue:
+        case ")":
             tokenType = .rightParen
-        case TokenSymbol.leftBrace.rawValue:
+        case "{":
             tokenType = .leftBrace
-        case TokenSymbol.rightBrace.rawValue:
+        case "}":
             tokenType = .rightBrace
-        case TokenSymbol.doubleQuatation.rawValue:
+        case "\"":
             return .makeString(string: readString())
         case let character? where isLetter(character):
             return .makeIdentifier(identifier: readIdentifier())

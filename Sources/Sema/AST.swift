@@ -79,7 +79,7 @@ extension LetStatement: Statement {
     }
     
     public var description: String {
-        return "\(tokenLiteral) \(name.value) \(TokenSymbol.equal.rawValue) \(value.description)\(TokenSymbol.semicolon.rawValue)"
+        return "\(tokenLiteral) \(name.value) = \(value.description);"
     }
 }
 
@@ -99,7 +99,7 @@ extension ReturnStatement: Statement {
     }
     
     public var description: String {
-        return "\(tokenLiteral) \(value.description)\(TokenSymbol.semicolon.rawValue)"
+        return "\(tokenLiteral) \(value.description);"
     }
 }
 
