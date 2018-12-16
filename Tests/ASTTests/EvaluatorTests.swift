@@ -182,6 +182,7 @@ final class EvaluatorTests: XCTestCase {
                 """,
              expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
             (input: "foobar", expected: EvaluatorError.unknownNode(Identifier(token: .makeIdentifier(identifier: "foobar")))),
+            (input: "\"Hello\" - \"World\"", expected: EvaluatorError.unknownOperator(left: .string, operator: "-", right: .string))
         ]
         
         tests.forEach {
@@ -206,6 +207,13 @@ final class EvaluatorTests: XCTestCase {
         let object = makeObject(from: input)
         
         testStringObject(object, expected: "hello world!")
+    }
+    
+    private func test_stringConcatenation() {
+        let input = "\"Hello\" + \" \" + \"World!\""
+        let object = makeObject(from: input)
+        
+        testStringObject(object, expected: "Hello World!")
     }
     
     private func testIntegerObject(_ object: Object, expected: Int64) {

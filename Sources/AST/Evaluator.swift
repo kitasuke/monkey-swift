@@ -132,6 +132,8 @@ public final class Evaluator {
             return toBooleanObject(from: leftBoolean.value == rightBoolean.value)
         case (let leftBoolean as Boolean, let rightBoolean as Boolean) where `operator` == Token(type: .notEqual).literal:
             return toBooleanObject(from: leftBoolean.value != rightBoolean.value)
+        case (let leftString as StringObject, let rightString as StringObject):
+            return try evaluateStringInfixExpression(left: leftString, operator: `operator`, right: rightString)
         case _ where left.type != right.type:
             throw EvaluatorError.typeMissMatch(left: left.type, operator: `operator`, right: right.type)
         default:
@@ -157,6 +159,15 @@ public final class Evaluator {
             return toBooleanObject(from: left.value == right.value)
         case Token(type: .notEqual).literal:
             return toBooleanObject(from: left.value != right.value)
+        default:
+            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+        }
+    }
+    
+    private func evaluateStringInfixExpression(left: StringObject, operator: String, right: StringObject) throws -> Object {
+        switch `operator` {
+        case Token(type: .plus).literal:
+            return StringObject(value: left.value + right.value)
         default:
             throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
         }
