@@ -20,4 +20,5 @@ public enum TokenSymbol: Character {
     case rightBrace = "}"
     case lessThan = "<"
     case greaterThan = ">"
+    case doubleQuatation = "\""
 }

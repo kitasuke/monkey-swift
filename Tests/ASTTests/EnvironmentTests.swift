@@ -21,8 +21,8 @@ final class EnvironmentTests: XCTestCase {
         let mockEnvironment = MockEnvironment(objects: mockObjects)
         
         XCTAssertTrue(
-            mockEnvironment.object(for: mockIdentifier)?.inspect() == mockValue.inspect(),
-            "environment.object(for: foo) wrong. want=\(mockValue.inspect())"
+            mockEnvironment.object(for: mockIdentifier)?.description == mockValue.description,
+            "environment.object(for: foo) wrong. want=\(mockValue.description)"
         )
     }
     
@@ -37,8 +37,8 @@ final class EnvironmentTests: XCTestCase {
         mockEnvironment.set(mockValue, for: mockIdentifier)
         
         XCTAssertTrue(
-            mockEnvironment.object(for: mockIdentifier)?.inspect() == mockValue.inspect(),
-            "environment.object(for: foo) wrong. want=\(mockValue.inspect())"
+            mockEnvironment.object(for: mockIdentifier)?.description == mockValue.description,
+            "environment.object(for: foo) wrong. want=\(mockValue.description)"
         )
     }
 }

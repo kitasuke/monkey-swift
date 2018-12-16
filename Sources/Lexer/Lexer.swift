@@ -61,6 +61,8 @@ public final class Lexer {
             tokenType = .leftBrace
         case TokenSymbol.rightBrace.rawValue:
             tokenType = .rightBrace
+        case TokenSymbol.doubleQuatation.rawValue:
+            return .makeString(string: readString())
         case let character? where isLetter(character):
             return .makeIdentifier(identifier: readIdentifier())
         case let character? where isDigit(character):
@@ -101,6 +103,16 @@ public final class Lexer {
         return readCharacter(while: isLetter)
     }
     
+    private func readString() -> String {
+        // "
+        setNextCharacter()
+        // x
+        let string = readCharacter(while: isString)
+        // "
+        setNextCharacter()
+        return string
+    }
+    
     private func readNumber() -> String {
         return readCharacter(while: isDigit)
     }
@@ -126,6 +138,10 @@ public final class Lexer {
         return ("a"..."z").contains(character) ||
             ("A" ... "Z").contains(character) ||
             character == "_"
+    }
+    
+    private func isString(_ character: Character) -> Bool {
+        return character != "\""
     }
     
     private func isDigit(_ character: Character) -> Bool {

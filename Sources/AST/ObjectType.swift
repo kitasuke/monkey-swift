@@ -8,6 +8,7 @@
 public enum ObjectType: String {
     case integer
     case boolean
+    case string
     case null
     case `return`
     case function

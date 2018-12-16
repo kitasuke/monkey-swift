@@ -26,7 +26,7 @@ public struct REPL {
 
             let evaluator = Evaluator()
             let object = try evaluator.evaluate(node: program, with: environment)
-            print(object.inspect())
+            print(object.description)
         } catch let error as Error & CustomStringConvertible {
             print(error.description)
         } catch let error {

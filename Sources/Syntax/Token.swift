@@ -9,7 +9,7 @@ public enum TokenType {
     case unknown, illegal, eof
 
     // Identifiers + literals
-    case identifier, int
+    case identifier, int, string
     
     // Operators
     case assign, plus, minus, bang, asterisk, slash, comma, semicolon, lessThan, greaterThan, equal, notEqual
@@ -40,6 +40,7 @@ public enum TokenType {
         case .rightParen: self = .rightParen
         case .leftBrace: self = .leftBrace
         case .rightBrace: self = .rightBrace
+        case .doubleQuatation: fatalError()
         }
     }
     
@@ -80,7 +81,7 @@ public struct Token {
         switch type {
         case .illegal: literal = "Illegal"
         case .eof: literal = "EOF"
-        case .identifier, .int:
+        case .identifier, .int, .string:
             assertionFailure("not supported")
             literal = ""
         case .assign: literal = String(TokenSymbol.equal.rawValue)
@@ -124,6 +125,10 @@ public struct Token {
     public static func makeNumber(number: String) -> Token {
         let type = TokenType(number: number)
         return Token(type: type, literal: number)
+    }
+    
+    public static func makeString(string: String) -> Token {
+        return Token(type: .string, literal: string)
     }
 }
 

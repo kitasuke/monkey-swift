@@ -201,6 +201,13 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
+    private func test_stringLiteral() {
+        let input = "\"hello world!\""
+        let object = makeObject(from: input)
+        
+        testStringObject(object, expected: "hello world!")
+    }
+    
     private func testIntegerObject(_ object: Object, expected: Int64) {
         guard let integer = object as? Integer else {
             XCTFail("object not \(Integer.self). got=\(type(of: object))")
@@ -217,6 +224,15 @@ final class EvaluatorTests: XCTestCase {
         }
         
         XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
+    }
+    
+    private func testStringObject(_ object: Object, expected: String) {
+        guard let stringObject = object as? StringObject else {
+            XCTFail("object not \(StringObject.self). got=\(type(of: object))")
+            return
+        }
+        
+        XCTAssertTrue(stringObject.value == expected, "stringObject.value wrong. want=\(expected), got=\(stringObject.value)")
     }
     
     private func testNullObject(_ object: Object) {

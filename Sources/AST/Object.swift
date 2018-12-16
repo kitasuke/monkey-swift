@@ -7,9 +7,8 @@
 
 import Sema
 
-public protocol Object {
+public protocol Object: CustomStringConvertible {
     var type: ObjectType { get }
-    func inspect() -> String
 }
 
 public struct Integer {
@@ -25,7 +24,7 @@ extension Integer: Object {
         return .integer
     }
     
-    public func inspect() -> String {
+    public var description: String {
         return "\(value)"
     }
 }
@@ -43,7 +42,25 @@ extension Boolean: Object {
         return .boolean
     }
     
-    public func inspect() -> String {
+    public var description: String {
+        return "\(value)"
+    }
+}
+
+public struct StringObject {
+    public let value: String
+    
+    public init(value: String) {
+        self.value = value
+    }
+}
+
+extension StringObject: Object {
+    public var type: ObjectType {
+        return .string
+    }
+    
+    public var description: String {
         return "\(value)"
     }
 }
@@ -55,7 +72,7 @@ extension Null: Object {
         return .null
     }
     
-    public func inspect() -> String {
+    public var description: String {
         return type.rawValue
     }
 }
@@ -73,8 +90,8 @@ extension ReturnValue: Object {
         return .return
     }
     
-    public func inspect() -> String {
-        return value.inspect()
+    public var description: String {
+        return value.description
     }
 }
 
@@ -95,7 +112,7 @@ extension Function: Object {
         return .function
     }
     
-    public func inspect() -> String {
+    public var description: String {
         let params = parameters.map { $0.description }.joined(separator: ", ")
         return "fn(\(params)) {\n\(body.description)\n}"
     }

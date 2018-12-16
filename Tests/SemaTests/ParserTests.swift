@@ -259,6 +259,14 @@ final class ParserTests: XCTestCase {
         }
     }
     
+    func test_stringLiteralExpression() {
+        let input = "\"hello world\";"
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        testStringLiteral(expression: statement.expression, expected: "hello world")
+    }
+    
     private func testLetStatement(_ statement: Statement, name: String) {
         guard statement.tokenLiteral == Token(type: .let).literal else {
             XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")
@@ -306,6 +314,15 @@ final class ParserTests: XCTestCase {
         }
         
         XCTAssertTrue(boolean.value == expected, "boolean.value not \(expected). got=\(boolean.value)")
+    }
+    
+    private func testStringLiteral(expression: Expression, expected: String) {
+        guard let stringLiteral = expression as? StringLigeral else {
+            XCTFail("statement.expression not \(StringLigeral.self). got=\(type(of: expression))")
+            return
+        }
+        
+        XCTAssertTrue(stringLiteral.value == expected, "stringLiteral.value not \(expected). got=\(stringLiteral.value)")
     }
     
     private func testIdentifier(expression: Expression, expected: String) {

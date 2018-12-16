@@ -252,6 +252,7 @@ public final class Parser {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
+        case .string: return parseStringLiteral()
         case .true, .false: return parseBoolean()
         case .bang, .minus: return try parsePrefixExpression()
         case .leftParen: return try parseGroupedExpression()
@@ -341,6 +342,10 @@ public final class Parser {
     
     private func parseBoolean() -> Boolean {
         return Boolean(token: currentToken)
+    }
+    
+    private func parseStringLiteral() -> StringLigeral {
+        return StringLigeral(token: .makeString(string: currentToken.literal))
     }
 
     private func setNextToken() {

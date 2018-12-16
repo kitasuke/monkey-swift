@@ -7,9 +7,8 @@
 
 import Syntax
 
-public protocol Node {
+public protocol Node: CustomStringConvertible {
     var tokenLiteral: String { get }
-    var description: String { get }
 }
 
 public protocol Statement: Node {}
@@ -307,5 +306,25 @@ extension Boolean: Expression {
     
     public var description: String {
         return token.literal
+    }
+}
+
+public struct StringLigeral {
+    public let token: Token
+    public let value: String
+    
+    public init(token: Token) {
+        self.token = token
+        self.value = token.literal
+    }
+}
+
+extension StringLigeral: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return tokenLiteral
     }
 }
