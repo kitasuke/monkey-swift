@@ -43,7 +43,7 @@ final class EnvironmentTests: XCTestCase {
     }
 }
 
-class MockEnvironment: EnvironmentType {
+final class MockEnvironment: EnvironmentType {
     let outer: EnvironmentType?
     var storedObjects: [Identifier : Object]
     

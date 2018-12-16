@@ -9,7 +9,7 @@ import Syntax
 
 typealias Position = Int
 
-public class Lexer {
+public final class Lexer {
     let input: String
     var currentPosition: Position = 0 // current position in input
     var readPosition: Position = 0 // current read position in input

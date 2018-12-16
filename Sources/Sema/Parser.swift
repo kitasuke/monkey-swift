@@ -9,7 +9,7 @@ import Foundation
 import Syntax
 import Lexer
 
-public class Parser {
+public final class Parser {
     var lexer: Lexer
     var currentToken = Token(type: .unknown)
     var peekToken = Token(type: .unknown)

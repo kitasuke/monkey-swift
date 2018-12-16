@@ -15,7 +15,7 @@ public protocol EnvironmentType {
     func set(_ object: Object, for identifier: Identifier)
 }
 
-public class Environment: EnvironmentType {
+public final class Environment: EnvironmentType {
     
     public let outer: EnvironmentType?
     public internal(set) var storedObjects: [Identifier: Object]
