@@ -4,7 +4,7 @@
 ## REPL
 
 1. Run `swift build` in your terminal
-2. Run `.build/debug/monkey-swift`
+2. Run `swift run`
 
 ## Xcode project
 
