@@ -10,9 +10,9 @@ import Syntax
 import Lexer
 
 public final class Parser {
-    var lexer: Lexer
-    var currentToken = Token(type: .unknown)
-    var peekToken = Token(type: .unknown)
+    private var lexer: Lexer
+    private var currentToken = Token(type: .unknown)
+    private var peekToken = Token(type: .unknown)
     
     private var currentPrecedence: PrecedenceKind {
         return .precedence(for: currentToken.type)

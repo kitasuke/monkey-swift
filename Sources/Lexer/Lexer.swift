@@ -10,10 +10,10 @@ import Syntax
 typealias Position = Int
 
 public final class Lexer {
-    let input: String
-    var currentPosition: Position = 0 // current position in input
-    var readPosition: Position = 0 // current read position in input
-    var character: Character?
+    private let input: String
+    private var currentPosition: Position = 0 // current position in input
+    private var readPosition: Position = 0 // current read position in input
+    private var character: Character?
     
     public init(input: String) {
         self.input = input
