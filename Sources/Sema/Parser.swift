@@ -50,6 +50,7 @@ public final class Parser {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
+        case .illegal: throw ParserError.expressionParsingFailed(token: currentToken)
         default: return try parseExpressionStatement()
         }
     }

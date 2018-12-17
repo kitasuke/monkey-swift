@@ -193,8 +193,6 @@ final class EvaluatorTests: XCTestCase {
                 _ = try evaluator.evaluate(node: program, with: environment)
                 XCTFail("shouldn't reach here")
             } catch let error as EvaluatorError {
-                print(error)
-                print($0.expected)
                 XCTAssertTrue(error == $0.expected, "error wrong. got=\(error.description), want=\($0.expected)")
             } catch {
                 XCTFail("unknown error"); fatalError()
