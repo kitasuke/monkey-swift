@@ -52,8 +52,8 @@ public final class Evaluator {
             return Integer(value: integerLiteral.value)
         case let boolean as Sema.Boolean:
             return toBooleanObject(from: boolean.value)
-        case let stringLiteral as StringLigeral:
-            return StringObject(value: stringLiteral.value)
+        case let string as StringLiteral:
+            return StringObject(value: string.value)
         default:
             throw EvaluatorError.unknownNode(node)
         }

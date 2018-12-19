@@ -309,7 +309,7 @@ extension Boolean: Expression {
     }
 }
 
-public struct StringLigeral {
+public struct StringLiteral {
     public let token: Token
     public let value: String
     
@@ -319,7 +319,7 @@ public struct StringLigeral {
     }
 }
 
-extension StringLigeral: Expression {
+extension StringLiteral: Expression {
     public var tokenLiteral: String {
         return token.literal
     }

@@ -345,8 +345,8 @@ public final class Parser {
         return Boolean(token: currentToken)
     }
     
-    private func parseStringLiteral() -> StringLigeral {
-        return StringLigeral(token: .makeString(string: currentToken.literal))
+    private func parseStringLiteral() -> StringLiteral {
+        return StringLiteral(token: .makeString(string: currentToken.literal))
     }
 
     private func setNextToken() {

@@ -317,8 +317,8 @@ final class ParserTests: XCTestCase {
     }
     
     private func testStringLiteral(expression: Expression, expected: String) {
-        guard let stringLiteral = expression as? StringLigeral else {
-            XCTFail("statement.expression not \(StringLigeral.self). got=\(type(of: expression))")
+        guard let stringLiteral = expression as? StringLiteral else {
+            XCTFail("statement.expression not \(StringLiteral.self). got=\(type(of: expression))")
             return
         }
         
