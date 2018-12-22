@@ -117,3 +117,55 @@ extension Function: Object {
         return "fn(\(params)) {\n\(body.description)\n}"
     }
 }
+
+public protocol BuiltinFunctionType {
+    associatedtype Argument
+    typealias BuiltinFunction = (Argument) throws -> Object
+    
+    var builtinFunction: BuiltinFunction { get }
+}
+
+public struct SingleArgumentBuiltinFunction: BuiltinFunctionType {
+    
+    public typealias Argument = Object
+    
+    public let builtinFunction: BuiltinFunction
+    
+    public init(builtinFunction: @escaping BuiltinFunction) {
+        self.builtinFunction = builtinFunction
+    }
+}
+
+public struct MultipleArgumentsBuiltinFunction: BuiltinFunctionType {
+    public typealias Argument = [Object]
+    
+    public let builtinFunction: BuiltinFunction
+    
+    public init(builtinFunction: @escaping BuiltinFunction) {
+        self.builtinFunction = builtinFunction
+    }
+}
+
+public struct AnyBuiltinFunction<T>: BuiltinFunctionType {
+    public typealias Argument = T
+    
+    private let _builtinFunction: () -> BuiltinFunction
+    
+    init<U: BuiltinFunctionType>(_ builtinType: U) where U.Argument == T {
+        _builtinFunction = { builtinType.builtinFunction }
+    }
+    
+    public var builtinFunction: BuiltinFunction {
+        return _builtinFunction()
+    }
+}
+
+extension AnyBuiltinFunction: Object {
+    public var type: ObjectType {
+        return .builtin
+    }
+    
+    public var description: String {
+        return "builtin function"
+    }
+}

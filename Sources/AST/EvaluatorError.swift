@@ -8,13 +8,16 @@
 import Foundation
 import Sema
 
-public enum EvaluatorError: Error, CustomStringConvertible {
+public enum EvaluatorError: Error {
     case unknownNode(Node)
     case noValidExpression([Statement])
     case typeMissMatch(left: ObjectType, operator: String, right: ObjectType)
     case unknownOperator(left: ObjectType?, operator: String, right: ObjectType)
     case notFunction(object: Object)
+    case unsupportedArgument(for: BuiltinIdentifier, argument: Object)
+}
 
+extension EvaluatorError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .unknownNode(let node):
@@ -29,6 +32,8 @@ public enum EvaluatorError: Error, CustomStringConvertible {
             return "unknown operator: \(`operator`)\(right)"
         case .notFunction(let object):
             return "not a function: \(object.type)"
+        case .unsupportedArgument(let builtinIdentifier, let argument):
+            return "argument \(type(of: argument)) to \(builtinIdentifier.rawValue) not supported"
         }
     }
 }

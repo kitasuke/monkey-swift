@@ -182,7 +182,8 @@ final class EvaluatorTests: XCTestCase {
                 """,
              expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
             (input: "foobar", expected: EvaluatorError.unknownNode(Identifier(token: .makeIdentifier(identifier: "foobar")))),
-            (input: "\"Hello\" - \"World\"", expected: EvaluatorError.unknownOperator(left: .string, operator: "-", right: .string))
+            (input: "\"Hello\" - \"World\"", expected: EvaluatorError.unknownOperator(left: .string, operator: "-", right: .string)),
+            (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: Integer(value: 1)))
         ]
         
         tests.forEach {
@@ -200,18 +201,31 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
-    private func test_stringLiteral() {
+    func test_stringLiteral() {
         let input = "\"hello world!\""
         let object = makeObject(from: input)
         
         testStringObject(object, expected: "hello world!")
     }
     
-    private func test_stringConcatenation() {
+    func test_stringConcatenation() {
         let input = "\"Hello\" + \" \" + \"World!\""
         let object = makeObject(from: input)
         
         testStringObject(object, expected: "Hello World!")
+    }
+    
+    func test_builtinFunctions() {
+        let tests: [(input: String, expected: Int64)] = [
+            (input: "len(\"\")", expected: 0),
+            (input: "len(\"four\")", expected: 4),
+            (input: "len(\"hello world\")", expected: 11)
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            testIntegerObject(object, expected: $0.expected)
+        }
     }
     
     private func testIntegerObject(_ object: Object, expected: Int64) {
@@ -294,6 +308,8 @@ extension EvaluatorError: Equatable {
             return (lhsOperator == rhsOperator) && (lhsRight == rhsRight)
         case (.unknownNode(let lhsNode), .unknownNode(let rhsNode)):
             return lhsNode.description == rhsNode.description
+        case (.unsupportedArgument(let lhsBuiltinIdentifier, let lhsArgument), .unsupportedArgument(let rhsBuiltinIdentifier, let rhsArgument)):
+            return lhsBuiltinIdentifier == rhsBuiltinIdentifier && type(of: lhsArgument) == type(of: rhsArgument)
         default:
             // return false because there is no need to test other errors
             return false

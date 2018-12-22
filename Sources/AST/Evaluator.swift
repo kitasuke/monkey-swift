@@ -199,21 +199,41 @@ public final class Evaluator {
     }
     
     private func evaluate(identifier: Identifier, with environment: EnvironmentType) throws -> Object {
-        guard let value = environment.object(for: identifier) else {
-            throw EvaluatorError.unknownNode(identifier)
+        if let value = environment.object(for: identifier) {
+            return value
         }
         
-        return value
+        switch BuiltinIdentifier(rawValue: identifier.value) {
+        case .len?:
+            let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateLen(argument:))
+            return AnyBuiltinFunction(builtinFunction)
+        default:
+            throw EvaluatorError.unknownNode(identifier)
+        }
+    }
+    
+    private func evaluateLen(argument: Object) throws -> Object {
+        switch argument {
+        case let string as StringObject:
+            return Integer(value: Int64(string.value.count))
+        default:
+            throw EvaluatorError.unsupportedArgument(for: .len, argument: argument)
+        }
     }
     
     private func apply(function object: Object, arguments: [Object]) throws -> Object {
-        guard let function = object as? Function else {
+        switch object {
+        case let function as Function:
+            let environment = extendedEnvironment(from: function, arguments: arguments)
+            let value = try evaluate(node: function.body, with: environment)
+            return unwrap(returnValue: value)
+        case let function as AnyBuiltinFunction<Object>:
+            return try function.builtinFunction(arguments[0])
+        case let function as AnyBuiltinFunction<[Object]>:
+            return try function.builtinFunction(arguments)
+        default:
             throw EvaluatorError.notFunction(object: object)
         }
-        
-        let environment = extendedEnvironment(from: function, arguments: arguments)
-        let value = try evaluate(node: function.body, with: environment)
-        return unwrap(returnValue: value)
     }
     
     private func extendedEnvironment(from function: Function, arguments: [Object]) -> EnvironmentType {
