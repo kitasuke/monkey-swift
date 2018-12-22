@@ -15,6 +15,7 @@ enum PrecedenceKind: UInt {
     case product
     case prefix
     case call
+    case index
 }
 
 extension PrecedenceKind {
@@ -25,6 +26,7 @@ extension PrecedenceKind {
         case .plus, .minus: return .sum
         case .slash, .asterisk: return .product
         case .leftParen: return .call
+        case .leftBracket: return .index
         default: return .lowest
         }
     }

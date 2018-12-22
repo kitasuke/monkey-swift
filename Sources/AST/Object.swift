@@ -11,7 +11,7 @@ public protocol Object: CustomStringConvertible {
     var type: ObjectType { get }
 }
 
-public struct Integer {
+public struct IntegerObject {
     public let value: Int64
     
     public init(value: Int64) {
@@ -19,7 +19,7 @@ public struct Integer {
     }
 }
 
-extension Integer: Object {
+extension IntegerObject: Object {
     public var type: ObjectType {
         return .integer
     }
@@ -29,7 +29,7 @@ extension Integer: Object {
     }
 }
 
-public struct Boolean {
+public struct BooleanObject {
     public let value: Bool
     
     public init(value: Bool) {
@@ -37,7 +37,7 @@ public struct Boolean {
     }
 }
 
-extension Boolean: Object {
+extension BooleanObject: Object {
     public var type: ObjectType {
         return .boolean
     }
@@ -167,5 +167,23 @@ extension AnyBuiltinFunction: Object {
     
     public var description: String {
         return "builtin function"
+    }
+}
+
+public struct ArrayObject {
+    public let elements: [Object]
+    
+    public init(elements: [Object]) {
+        self.elements = elements
+    }
+}
+
+extension ArrayObject: Object {
+    public var type: ObjectType {
+        return .array
+    }
+    
+    public var description: String {
+        return "[\(elements.map { $0.description }.joined(separator: ", "))]"
     }
 }

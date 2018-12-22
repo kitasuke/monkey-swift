@@ -11,9 +11,11 @@ public protocol Node: CustomStringConvertible {
     var tokenLiteral: String { get }
 }
 
-public protocol Statement: Node {}
+public protocol Statement: Node {
+    var token: Token { get }
+}
 
-public protocol Expression: Node {}
+public protocol Expression: Statement {}
 
 public struct Program {
     public let statements: [Statement]
@@ -326,5 +328,47 @@ extension StringLiteral: Expression {
     
     public var description: String {
         return tokenLiteral
+    }
+}
+
+public struct ArrayLiteral {
+    public let token: Token
+    public let elements: [Expression]
+    
+    public init(token: Token, elements: [Expression]) {
+        self.token = token
+        self.elements = elements
+    }
+}
+
+extension ArrayLiteral: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return "[\(elements.map { $0.description }.joined(separator: ", "))]"
+    }
+}
+
+public struct IndexExpression {
+    public let token: Token
+    public let left: Expression
+    public let index: Expression
+    
+    public init(token: Token, left: Expression, index: Expression) {
+        self.token = token
+        self.left = left
+        self.index = index
+    }
+}
+
+extension IndexExpression: Expression {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+    
+    public var description: String {
+        return "(\(left.description)[\(index.description)])"
     }
 }

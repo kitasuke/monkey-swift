@@ -14,7 +14,7 @@ public enum TokenType {
     // Operators
     case assign, plus, minus, bang, asterisk, slash, comma, semicolon, lessThan, greaterThan, equal, notEqual
     
-    case leftParen, rightParen, leftBrace, rightBrace
+    case leftParen, rightParen, leftBrace, rightBrace, leftBracket, rightBracket
     
     // Keywords
     case function, `let`, `true`, `false`, `if`, `else`, `return`
@@ -40,6 +40,8 @@ public enum TokenType {
         case .rightParen: self = .rightParen
         case .leftBrace: self = .leftBrace
         case .rightBrace: self = .rightBrace
+        case .leftBracket: self = .leftBracket
+        case .rightBracket: self = .rightBracket
         case .doubleQuatation: fatalError()
         }
     }
@@ -100,6 +102,8 @@ public struct Token {
         case .rightParen: literal = String(TokenSymbol.rightParen.rawValue)
         case .leftBrace: literal = String(TokenSymbol.leftBrace.rawValue)
         case .rightBrace: literal = String(TokenSymbol.rightBrace.rawValue)
+        case .leftBracket: literal = String(TokenSymbol.leftBracket.rawValue)
+        case .rightBracket: literal = String(TokenSymbol.rightBracket.rawValue)
         case .function: literal = TokenKeyword.fn.rawValue
         case .let: literal = TokenKeyword.let.rawValue
         case .true: literal = TokenKeyword.true.rawValue

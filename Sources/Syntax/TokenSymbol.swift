@@ -18,6 +18,8 @@ public enum TokenSymbol: Character {
     case rightParen = ")"
     case leftBrace = "{"
     case rightBrace = "}"
+    case leftBracket = "["
+    case rightBracket = "]"
     case lessThan = "<"
     case greaterThan = ">"
     case doubleQuatation = "\""

@@ -140,6 +140,8 @@ final class ParserTests: XCTestCase {
             (input: "2 / (5 + 5)", expected: "(2 / (5 + 5))"),
             (input: "-(5 + 5)", expected: "(-(5 + 5))"),
             (input: "!(true == true)", expected: "(!(true == true))"),
+            (input: "a * [1, 2, 3, 4][b * c] * d", expected: "((a * ([1, 2, 3, 4][(b * c)])) * d)"),
+            (input: "add(a * b[2], b[1], 2 * [1, 2][1])", expected: "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))")
         ]
         
         precedenceTests.forEach {
@@ -202,7 +204,7 @@ final class ParserTests: XCTestCase {
         }
         
         guard let consequence = ifExpression.consequence.statements[0] as? ExpressionStatement else {
-            XCTFail("consequence.statements[0] not \(ExpressionStatement.self). got=\(ifExpression.consequence.statements[0])")
+            XCTFail("consequence.statements[0] not \(ExpressionStatement.self). got=\(type(of: ifExpression.consequence.statements[0]))")
             return
         }
         
@@ -218,7 +220,7 @@ final class ParserTests: XCTestCase {
         let statement = makeExpressionStatement(from: program)
         
         guard let functionLiteral = statement.expression as? FunctionLiteral else {
-            XCTFail("statement.expression not \(FunctionLiteral.self). got=\(statement.expression)")
+            XCTFail("statement.expression not \(FunctionLiteral.self). got=\(type(of: statement.expression))")
             return
         }
         
@@ -228,7 +230,7 @@ final class ParserTests: XCTestCase {
         }
         
         guard let bodyStatement = functionLiteral.body.statements[0] as? ExpressionStatement else {
-            XCTFail("function.body.statements[0] not \(ExpressionStatement.self). got=\(functionLiteral.body.statements[0])")
+            XCTFail("function.body.statements[0] not \(ExpressionStatement.self). got=\(type(of: functionLiteral.body.statements[0]))")
             return
         }
         
@@ -247,7 +249,7 @@ final class ParserTests: XCTestCase {
             let statement = makeExpressionStatement(from: program)
             
             guard let functionLiteral = statement.expression as? FunctionLiteral else {
-                XCTFail("statement.expression not \(FunctionLiteral.self). got=\(statement.expression)")
+                XCTFail("statement.expression not \(FunctionLiteral.self). got=\(type(of: statement.expression))")
                 return
             }
             
@@ -265,6 +267,37 @@ final class ParserTests: XCTestCase {
         let statement = makeExpressionStatement(from: program)
         
         testStringLiteral(expression: statement.expression, expected: "hello world")
+    }
+    
+    func test_arrayLiteralExpression() {
+        let input = "[1, 2 * 2, 3 + 3]"
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let arrayLiteral = statement.expression as? ArrayLiteral else {
+            XCTFail("statement.expression not \(ArrayLiteral.self). got=\(type(of: statement.expression))")
+            return
+        }
+        
+        XCTAssertTrue(arrayLiteral.elements.count == 3, "arrayLiteral.elements not 3. got=\(arrayLiteral.elements.count)")
+        testLiteralExpression(arrayLiteral.elements[0], expected: 1)
+        testInfixExpression(arrayLiteral.elements[1], leftValue: 2, operator: "*", rightValue: 2)
+        testInfixExpression(arrayLiteral.elements[2], leftValue: 3, operator: "+", rightValue: 3)
+    }
+    
+    func test_parsingIndexExpression() {
+        let input = "myArray[1 + 1]"
+        
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let indexExpression = statement.expression as? IndexExpression else {
+            XCTFail("statement.expression not \(IndexExpression.self). got=\(type(of: statement.expression))")
+            return
+        }
+        
+        testIdentifier(expression: indexExpression.left, expected: "myArray")
+        testInfixExpression(indexExpression.index, leftValue: 1, operator: "+", rightValue: 1)
     }
     
     private func testLetStatement(_ statement: Statement, name: String) {

@@ -9,6 +9,7 @@ public enum ObjectType: String {
     case integer
     case boolean
     case string
+    case array
     case null
     case `return`
     case function

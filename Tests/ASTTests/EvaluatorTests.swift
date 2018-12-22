@@ -11,8 +11,8 @@ import Lexer
 import Sema
 import AST
 
-typealias Integer = AST.Integer
-typealias Boolean = AST.Boolean
+typealias Integer = AST.IntegerObject
+typealias Boolean = AST.BooleanObject
 
 final class EvaluatorTests: XCTestCase {
     func test_evaluateIntegerExpression() {
@@ -225,6 +225,46 @@ final class EvaluatorTests: XCTestCase {
         tests.forEach {
             let object = makeObject(from: $0.input)
             testIntegerObject(object, expected: $0.expected)
+        }
+    }
+    
+    func test_arrayLiterals() {
+        let input = "[1, 2 * 2, 3 + 3]"
+        let object = makeObject(from: input)
+        
+        guard let array = object as? ArrayObject else {
+            XCTFail("object not \(ArrayObject.self). got=\(type(of: object))")
+            return
+        }
+        
+        XCTAssertTrue(array.elements.count == 3, "array.elements.count not 3. got=\(array.elements.count)")
+        testIntegerObject(array.elements[0], expected: 1)
+        testIntegerObject(array.elements[1], expected: 4)
+        testIntegerObject(array.elements[2], expected: 6)
+    }
+    
+    func test_arrayIndexExpressions() {
+        let tests: [(input: String, expected: Any?)] = [
+            (input: "[1, 2, 3][0]", expected: 1),
+            (input: "[1, 2, 3][1]", expected: 2),
+            (input: "[1, 2, 3][2]", expected: 3),
+            (input: "let i = 0; [1][i]", expected: 1),
+            (input: "[1, 2, 3][1 + 1]", expected: 3),
+            (input: "let myArray = [1, 2, 3]; myArray[2];", expected: 3),
+            (input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", expected: 6),
+            (input: "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]", expected: 2),
+            (input: "[1, 2, 3][3]", expected: nil),
+            (input: "[1, 2, 3][-1]", expected: nil),
+        ]
+        
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            switch object {
+            case is IntegerObject:
+                testIntegerObject(object, expected: Int64($0.expected as! Int))
+            default:
+                testNullObject(object)
+            }
         }
     }
     

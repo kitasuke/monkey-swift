@@ -10,8 +10,8 @@ import Sema
 
 public final class Evaluator {
     
-    private let `true` = Boolean(value: true)
-    private let `false` = Boolean(value: false)
+    private let `true` = BooleanObject(value: true)
+    private let `false` = BooleanObject(value: false)
     private let null = Null()
     
     public init() {}
@@ -44,16 +44,23 @@ public final class Evaluator {
             let function = try evaluate(node: callExpression.function, with: environment)
             let arguments = try evaluate(expressions: callExpression.arguments, with: environment)
             return try apply(function: function, arguments: arguments)
+        case let indexExpression as IndexExpression:
+            let left = try evaluate(node: indexExpression.left, with: environment)
+            let index = try evaluate(node: indexExpression.index, with: environment)
+            return try evaluate(indexExpression: index, left: left)
         case let identifier as Identifier:
             return try evaluate(identifier: identifier, with: environment)
         case let functionLiteral as FunctionLiteral:
             return Function(parameters: functionLiteral.parameters, body: functionLiteral.body, environment: environment)
         case let integerLiteral as IntegerLiteral:
-            return Integer(value: integerLiteral.value)
+            return IntegerObject(value: integerLiteral.value)
         case let boolean as Sema.Boolean:
             return toBooleanObject(from: boolean.value)
-        case let string as StringLiteral:
-            return StringObject(value: string.value)
+        case let stringLiteral as StringLiteral:
+            return StringObject(value: stringLiteral.value)
+        case let arrayLiteral as ArrayLiteral:
+            let elements = try arrayLiteral.elements.map { try evaluate(node: $0, with: environment) }
+            return ArrayObject(elements: elements)
         default:
             throw EvaluatorError.unknownNode(node)
         }
@@ -104,9 +111,9 @@ public final class Evaluator {
     
     private func evaluate(bangPrefixOperatorExpression object: Object) -> Object {
         switch object {
-        case let boolean as Boolean where boolean.value:
+        case let boolean as BooleanObject where boolean.value:
             return `false`
-        case let boolean as Boolean where !boolean.value:
+        case let boolean as BooleanObject where !boolean.value:
             return `true`
         case _ as Null:
             return `true`
@@ -117,20 +124,20 @@ public final class Evaluator {
     
     private func evaluate(minusPrefixOperatorExpression object: Object) throws -> Object {
         guard object.type == .integer,
-            let integer = object as? Integer else {
+            let integer = object as? IntegerObject else {
             throw EvaluatorError.unknownOperator(left: nil, operator: Token(type: .minus).literal, right: object.type)
         }
         
-        return Integer(value: -integer.value)
+        return IntegerObject(value: -integer.value)
     }
     
     private func evaluateInfixExpression(operator: String, left: Object, right: Object) throws -> Object {
         switch (left, right) {
-        case (let leftInteger as Integer, let rightInteger as Integer):
+        case (let leftInteger as IntegerObject, let rightInteger as IntegerObject):
             return try evaluateIntegerInfixExpression(left: leftInteger, operator: `operator`, right: rightInteger)
-        case (let leftBoolean as Boolean, let rightBoolean as Boolean) where `operator` == Token(type: .equal).literal:
+        case (let leftBoolean as BooleanObject, let rightBoolean as BooleanObject) where `operator` == Token(type: .equal).literal:
             return toBooleanObject(from: leftBoolean.value == rightBoolean.value)
-        case (let leftBoolean as Boolean, let rightBoolean as Boolean) where `operator` == Token(type: .notEqual).literal:
+        case (let leftBoolean as BooleanObject, let rightBoolean as BooleanObject) where `operator` == Token(type: .notEqual).literal:
             return toBooleanObject(from: leftBoolean.value != rightBoolean.value)
         case (let leftString as StringObject, let rightString as StringObject):
             return try evaluateStringInfixExpression(left: leftString, operator: `operator`, right: rightString)
@@ -141,16 +148,16 @@ public final class Evaluator {
         }
     }
     
-    private func evaluateIntegerInfixExpression(left: Integer, operator: String, right: Integer) throws -> Object {
+    private func evaluateIntegerInfixExpression(left: IntegerObject, operator: String, right: IntegerObject) throws -> Object {
         switch `operator` {
         case Token(type: .plus).literal:
-            return Integer(value: left.value + right.value)
+            return IntegerObject(value: left.value + right.value)
         case Token(type: .minus).literal:
-            return Integer(value: left.value - right.value)
+            return IntegerObject(value: left.value - right.value)
         case Token(type: .asterisk).literal:
-            return Integer(value: left.value * right.value)
+            return IntegerObject(value: left.value * right.value)
         case Token(type: .slash).literal:
-            return Integer(value: left.value / right.value)
+            return IntegerObject(value: left.value / right.value)
         case Token(type: .lessThan).literal:
             return toBooleanObject(from: left.value < right.value)
         case Token(type: .greaterThan).literal:
@@ -179,8 +186,8 @@ public final class Evaluator {
         let isTruthy: (Object) -> Bool = { object in
             switch object {
             case _ where object.type == .null: return false
-            case let boolean as Boolean where boolean.value: return true
-            case let boolean as Boolean where !boolean.value: return false
+            case let boolean as BooleanObject where boolean.value: return true
+            case let boolean as BooleanObject where !boolean.value: return false
             default: return true
             }
         }
@@ -196,6 +203,23 @@ public final class Evaluator {
     
     private func evaluate(expressions: [Expression], with environment: EnvironmentType) throws -> [Object] {
         return try expressions.map { try evaluate(node: $0, with: environment) }
+    }
+    
+    private func evaluate(indexExpression index: Object, left: Object) throws -> Object {
+        switch (left, index) {
+        case (let array as ArrayObject, let integer as IntegerObject):
+            return evaluate(arrayIndexExpression: integer, left: array)
+        default:
+            throw EvaluatorError.unsupportedIndexOperator(index: index, left: left)
+        }
+    }
+    
+    private func evaluate(arrayIndexExpression index: IntegerObject, left: ArrayObject) -> Object {
+        guard index.value >= 0 && index.value < left.elements.count else {
+            return null
+        }
+        
+        return left.elements[Int(index.value)]
     }
     
     private func evaluate(identifier: Identifier, with environment: EnvironmentType) throws -> Object {
@@ -215,7 +239,7 @@ public final class Evaluator {
     private func evaluateLen(argument: Object) throws -> Object {
         switch argument {
         case let string as StringObject:
-            return Integer(value: Int64(string.value.count))
+            return IntegerObject(value: Int64(string.value.count))
         default:
             throw EvaluatorError.unsupportedArgument(for: .len, argument: argument)
         }
@@ -252,7 +276,7 @@ public final class Evaluator {
         return returnValue.value
     }
     
-    private func toBooleanObject(from bool: Bool) -> Boolean {
+    private func toBooleanObject(from bool: Bool) -> BooleanObject {
         if bool {
             return `true`
         } else {

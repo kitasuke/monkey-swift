@@ -212,26 +212,43 @@ public final class Parser {
     }
     
     private func parseCallExpression(with function: Expression) throws -> CallExpression {
-        let arguments = try parseCallArguments()
+        let arguments = try parseExpressionList(until: .rightParen)
         return CallExpression(token: currentToken, function: function, arguments: arguments)
     }
     
-    private func parseCallArguments() throws -> [Expression] {
-        var arguments: [Expression] = []
+    private func parseIndexExpression(with left: Expression) throws -> IndexExpression {
+        let indexToken = currentToken
+        
+        // [
+        setNextToken()
+        
+        // x
+        guard let index = try parseExpression() else {
+            throw ParserError.expressionParsingFailed(token: currentToken)
+        }
+        
+        // ]
+        try setNextToken(expects: .rightBracket)
+        
+        return IndexExpression(token: indexToken, left: left, index: index)
+    }
+    
+    private func parseExpressionList(until end: TokenType) throws -> [Expression] {
+        var list: [Expression] = []
 
         // (
-        guard !isPeekToken(equalTo: .rightParen) else {
+        guard !isPeekToken(equalTo: end) else {
             setNextToken()
-            return arguments
+            return list
         }
         
         // x
         setNextToken()
         
-        guard let argument = try parseExpression() else {
+        guard let element = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
-        arguments.append(argument)
+        list.append(element)
         
         while isPeekToken(equalTo: .comma) {
             // ,
@@ -239,14 +256,15 @@ public final class Parser {
             // y
             setNextToken()
             
-            if let argument = try parseExpression() {
-                arguments.append(argument)
+            guard let element = try parseExpression() else {
+                throw ParserError.expressionParsingFailed(token: currentToken)
             }
+            list.append(element)
         }
         
-        try setNextToken(expects: .rightParen)
+        try setNextToken(expects: end)
         
-        return arguments
+        return list
     }
     
     private func parsePrefixOperator() throws -> Expression? {
@@ -259,6 +277,7 @@ public final class Parser {
         case .leftParen: return try parseGroupedExpression()
         case .if: return try parseIfExpression()
         case .function: return try parseFunctionLiteral()
+        case .leftBracket: return try parseArrayLiteral()
         default: return nil
         }
     }
@@ -285,6 +304,9 @@ public final class Parser {
         case .leftParen:
             setNextToken()
             return try parseCallExpression(with: left)
+        case .leftBracket:
+            setNextToken()
+            return try parseIndexExpression(with: left)
         default: return nil
         }
     }
@@ -347,6 +369,12 @@ public final class Parser {
     
     private func parseStringLiteral() -> StringLiteral {
         return StringLiteral(token: .makeString(string: currentToken.literal))
+    }
+    
+    private func parseArrayLiteral() throws -> ArrayLiteral {
+        let arrayToken = currentToken
+        let elements = try parseExpressionList(until: .rightBracket)
+        return ArrayLiteral(token: arrayToken, elements:elements)
     }
 
     private func setNextToken() {

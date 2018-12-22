@@ -61,6 +61,10 @@ public final class Lexer {
             tokenType = .leftBrace
         case "}":
             tokenType = .rightBrace
+        case "[":
+            tokenType = .leftBracket
+        case "]":
+            tokenType = .rightBracket
         case "\"":
             return .makeString(string: readString())
         case let character? where isLetter(character):
