@@ -183,7 +183,10 @@ final class EvaluatorTests: XCTestCase {
              expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
             (input: "foobar", expected: EvaluatorError.unknownNode(Identifier(token: .makeIdentifier(identifier: "foobar")))),
             (input: "\"Hello\" - \"World\"", expected: EvaluatorError.unknownOperator(left: .string, operator: "-", right: .string)),
-            (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: Integer(value: 1)))
+            (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: Integer(value: 1))),
+            (input: "len([], [1])", expected: EvaluatorError.wrongNumberArguments(count: 2)),
+            (input: "first(1)", expected: EvaluatorError.unsupportedArgument(for: .first, argument: Integer(value: 1))),
+            (input: "first(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
         ]
         
         tests.forEach {
@@ -216,15 +219,23 @@ final class EvaluatorTests: XCTestCase {
     }
     
     func test_builtinFunctions() {
-        let tests: [(input: String, expected: Int64)] = [
+        let tests: [(input: String, expected: Int64?)] = [
             (input: "len(\"\")", expected: 0),
             (input: "len(\"four\")", expected: 4),
-            (input: "len(\"hello world\")", expected: 11)
+            (input: "len(\"hello world\")", expected: 11),
+            (input: "len([1, 2])", expected: 2),
+            (input: "let myArray = [1, 2, 3]; len(myArray)", expected: 3),
+            (input: "first([1, 2, 3])", expected: 1),
+            (input: "first([])", expected: nil),
         ]
         
         tests.forEach {
             let object = makeObject(from: $0.input)
-            testIntegerObject(object, expected: $0.expected)
+            if let expected = $0.expected {
+                testIntegerObject(object, expected: expected)
+            } else {
+                testNullObject(object)
+            }
         }
     }
     
@@ -350,6 +361,8 @@ extension EvaluatorError: Equatable {
             return lhsNode.description == rhsNode.description
         case (.unsupportedArgument(let lhsBuiltinIdentifier, let lhsArgument), .unsupportedArgument(let rhsBuiltinIdentifier, let rhsArgument)):
             return lhsBuiltinIdentifier == rhsBuiltinIdentifier && type(of: lhsArgument) == type(of: rhsArgument)
+        case (.wrongNumberArguments(let lhsCount), .wrongNumberArguments(let rhsCount)):
+            return lhsCount == rhsCount
         default:
             // return false because there is no need to test other errors
             return false

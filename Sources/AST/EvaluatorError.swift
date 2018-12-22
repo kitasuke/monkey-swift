@@ -16,6 +16,7 @@ public enum EvaluatorError: Error {
     case notFunction(object: Object)
     case unsupportedArgument(for: BuiltinIdentifier, argument: Object)
     case unsupportedIndexOperator(index: Object, left: Object)
+    case wrongNumberArguments(count: Int)
 }
 
 extension EvaluatorError: CustomStringConvertible {
@@ -37,6 +38,8 @@ extension EvaluatorError: CustomStringConvertible {
             return "argument \(type(of: argument)) to \(builtinIdentifier.rawValue) not supported"
         case .unsupportedIndexOperator(let index, let left):
             return "index operator \(index.type) not supported \(left.type)"
+        case .wrongNumberArguments(let count):
+            return "wrong number of arguments. got=\(count), want=1"
         }
     }
 }

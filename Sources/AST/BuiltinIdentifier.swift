@@ -9,4 +9,5 @@ import Foundation
 
 public enum BuiltinIdentifier: String {
     case len
+    case first
 }

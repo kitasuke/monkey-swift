@@ -231,17 +231,31 @@ public final class Evaluator {
         case .len?:
             let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateLen(argument:))
             return AnyBuiltinFunction(builtinFunction)
+        case .first?:
+            let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateFirst(argument:))
+            return AnyBuiltinFunction(builtinFunction)
         default:
             throw EvaluatorError.unknownNode(identifier)
         }
     }
     
-    private func evaluateLen(argument: Object) throws -> Object {
+    private func evaluateLen(argument: Object) throws -> IntegerObject {
         switch argument {
         case let string as StringObject:
             return IntegerObject(value: Int64(string.value.count))
+        case let array as ArrayObject:
+            return IntegerObject(value: Int64(array.elements.count))
         default:
             throw EvaluatorError.unsupportedArgument(for: .len, argument: argument)
+        }
+    }
+    
+    private func evaluateFirst(argument: Object) throws -> Object {
+        switch argument {
+        case let array as ArrayObject:
+            return array.elements.isEmpty ? null : array.elements[0]
+        default:
+            throw EvaluatorError.unsupportedArgument(for: .first, argument: argument)
         }
     }
     
@@ -252,6 +266,9 @@ public final class Evaluator {
             let value = try evaluate(node: function.body, with: environment)
             return unwrap(returnValue: value)
         case let function as AnyBuiltinFunction<Object>:
+            guard arguments.count == 1 else {
+                throw EvaluatorError.wrongNumberArguments(count: arguments.count)
+            }
             return try function.builtinFunction(arguments[0])
         case let function as AnyBuiltinFunction<[Object]>:
             return try function.builtinFunction(arguments)
