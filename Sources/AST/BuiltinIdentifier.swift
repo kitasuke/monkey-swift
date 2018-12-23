@@ -11,4 +11,5 @@ public enum BuiltinIdentifier: String {
     case len
     case first
     case last
+    case rest
 }

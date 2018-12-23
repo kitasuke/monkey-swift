@@ -188,7 +188,9 @@ final class EvaluatorTests: XCTestCase {
             (input: "first(1)", expected: EvaluatorError.unsupportedArgument(for: .first, argument: Integer(value: 1))),
             (input: "first(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
             (input: "last(1)", expected: EvaluatorError.unsupportedArgument(for: .last, argument: Integer(value: 1))),
-            (input: "last(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
+            (input: "last(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
+            (input: "rest(1)", expected: EvaluatorError.unsupportedArgument(for: .rest, argument: Integer(value: 1))),
+            (input: "rest(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
         ]
         
         tests.forEach {
@@ -221,7 +223,7 @@ final class EvaluatorTests: XCTestCase {
     }
     
     func test_builtinFunctions() {
-        let tests: [(input: String, expected: Int64?)] = [
+        let tests: [(input: String, expected: Any?)] = [
             (input: "len(\"\")", expected: 0),
             (input: "len(\"four\")", expected: 4),
             (input: "len(\"hello world\")", expected: 11),
@@ -231,13 +233,25 @@ final class EvaluatorTests: XCTestCase {
             (input: "first([])", expected: nil),
             (input: "last([1, 2, 3])", expected: 3),
             (input: "last([])", expected: nil),
+            (input: "rest([1, 2, 3])", expected: [2, 3]),
+            (input: "rest([])", expected: nil),
         ]
         
         tests.forEach {
             let object = makeObject(from: $0.input)
-            if let expected = $0.expected {
-                testIntegerObject(object, expected: expected)
-            } else {
+            switch $0.expected {
+            case let expected as Int:
+                testIntegerObject(object, expected: Int64(expected))
+            case let expecteds as Array<Int>:
+                guard let array = object as? ArrayObject else {
+                    XCTFail("\(type(of: object)) not \(ArrayObject.self)")
+                    return
+                }
+                
+                for (index, expected) in expecteds.enumerated() {
+                    testIntegerObject(array.elements[index], expected: Int64(expected))
+                }
+            default:
                 testNullObject(object)
             }
         }

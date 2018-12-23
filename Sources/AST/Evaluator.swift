@@ -237,6 +237,9 @@ public final class Evaluator {
         case .last?:
             let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateLast(argument:))
             return AnyBuiltinFunction(builtinFunction)
+        case .rest?:
+            let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateRest(argument:))
+            return AnyBuiltinFunction(builtinFunction)
         default:
             throw EvaluatorError.unknownNode(identifier)
         }
@@ -268,6 +271,15 @@ public final class Evaluator {
             return array.elements.isEmpty ? null : array.elements.last!
         default:
             throw EvaluatorError.unsupportedArgument(for: .last, argument: argument)
+        }
+    }
+    
+    private func evaluateRest(argument: Object) throws -> Object {
+        switch argument {
+        case let array as ArrayObject:
+            return array.elements.isEmpty ? null : ArrayObject(elements: Array(array.elements.dropFirst()))
+        default:
+            throw EvaluatorError.unsupportedArgument(for: .rest, argument: argument)
         }
     }
     
