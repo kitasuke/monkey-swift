@@ -186,7 +186,9 @@ final class EvaluatorTests: XCTestCase {
             (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: Integer(value: 1))),
             (input: "len([], [1])", expected: EvaluatorError.wrongNumberArguments(count: 2)),
             (input: "first(1)", expected: EvaluatorError.unsupportedArgument(for: .first, argument: Integer(value: 1))),
-            (input: "first(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
+            (input: "first(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
+            (input: "last(1)", expected: EvaluatorError.unsupportedArgument(for: .last, argument: Integer(value: 1))),
+            (input: "last(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
         ]
         
         tests.forEach {
@@ -227,6 +229,8 @@ final class EvaluatorTests: XCTestCase {
             (input: "let myArray = [1, 2, 3]; len(myArray)", expected: 3),
             (input: "first([1, 2, 3])", expected: 1),
             (input: "first([])", expected: nil),
+            (input: "last([1, 2, 3])", expected: 3),
+            (input: "last([])", expected: nil),
         ]
         
         tests.forEach {
