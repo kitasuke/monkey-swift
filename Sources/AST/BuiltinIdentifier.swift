@@ -12,4 +12,5 @@ public enum BuiltinIdentifier: String {
     case first
     case last
     case rest
+    case push
 }

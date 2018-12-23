@@ -190,7 +190,9 @@ final class EvaluatorTests: XCTestCase {
             (input: "last(1)", expected: EvaluatorError.unsupportedArgument(for: .last, argument: Integer(value: 1))),
             (input: "last(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
             (input: "rest(1)", expected: EvaluatorError.unsupportedArgument(for: .rest, argument: Integer(value: 1))),
-            (input: "rest(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2))
+            (input: "rest(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
+            (input: "push(1, 2)", expected: EvaluatorError.unsupportedArgument(for: .push, argument: Integer(value: 1))),
+            (input: "push(1)", expected: EvaluatorError.wrongNumberArguments(count: 1))
         ]
         
         tests.forEach {
@@ -235,6 +237,8 @@ final class EvaluatorTests: XCTestCase {
             (input: "last([])", expected: nil),
             (input: "rest([1, 2, 3])", expected: [2, 3]),
             (input: "rest([])", expected: nil),
+            (input: "push([1, 2], 3)", expected: [1, 2, 3]),
+            (input: "push([], 1)", expected: [1])
         ]
         
         tests.forEach {

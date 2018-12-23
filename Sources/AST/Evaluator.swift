@@ -240,6 +240,9 @@ public final class Evaluator {
         case .rest?:
             let builtinFunction = SingleArgumentBuiltinFunction(builtinFunction: evaluateRest(argument:))
             return AnyBuiltinFunction(builtinFunction)
+        case .push?:
+            let builtinFunction = MultipleArgumentsBuiltinFunction(builtinFunction: evaluatePush(arguments:))
+            return AnyBuiltinFunction(builtinFunction)
         default:
             throw EvaluatorError.unknownNode(identifier)
         }
@@ -280,6 +283,19 @@ public final class Evaluator {
             return array.elements.isEmpty ? null : ArrayObject(elements: Array(array.elements.dropFirst()))
         default:
             throw EvaluatorError.unsupportedArgument(for: .rest, argument: argument)
+        }
+    }
+    
+    private func evaluatePush(arguments: [Object]) throws -> Object {
+        guard arguments.count == 2 else {
+            throw EvaluatorError.wrongNumberArguments(count: arguments.count)
+        }
+        
+        switch arguments[0] {
+        case let array as ArrayObject:
+            return ArrayObject(elements: array.elements + [arguments[1]])
+        default:
+            throw EvaluatorError.unsupportedArgument(for: .push, argument: arguments[0])
         }
     }
     
