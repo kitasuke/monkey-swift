@@ -16,7 +16,7 @@ public final class Evaluator {
     
     public init() {}
     
-    public func evaluate(node: Node, with environment: EnvironmentType) throws -> Object {
+    public func evaluate(node: NodeType, with environment: EnvironmentType) throws -> Object {
         switch node {
         case let program as Program:
             return try evaluate(program: program, with: environment)
@@ -201,7 +201,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(expressions: [Expression], with environment: EnvironmentType) throws -> [Object] {
+    private func evaluate(expressions: [ExpressionType], with environment: EnvironmentType) throws -> [Object] {
         return try expressions.map { try evaluate(node: $0, with: environment) }
     }
     

@@ -7,33 +7,31 @@
 
 import Syntax
 
-public protocol Node: CustomStringConvertible {
+public protocol NodeType: CustomStringConvertible {
     var tokenLiteral: String { get }
-}
-
-public protocol Statement: Node {
     var token: Token { get }
 }
 
-public protocol Expression: Statement {}
+extension NodeType {
+    public var tokenLiteral: String {
+        return token.literal
+    }
+}
 
-public struct Program {
-    public let statements: [Statement]
+public protocol StatementType: NodeType {}
+public protocol ExpressionType: StatementType {}
+
+public struct Program: NodeType {
+    public let token: Token
+    public let statements: [StatementType]
     
-    public init(statements: [Statement]) {
+    public init(statements: [StatementType]) {
+        self.token = .init(type: .unknown)
         self.statements = statements
     }
 }
 
-extension Program: Node {
-    public var tokenLiteral: String {
-        if statements.isEmpty {
-            return ""
-        } else {
-            return statements[0].tokenLiteral
-        }
-    }
-    
+extension Program {
     public var description: String {
         return statements.reduce("") { result, statement in
             result + statement.description
@@ -43,19 +41,15 @@ extension Program: Node {
 
 public struct BlockStatement {
     public let token: Token
-    public let statements: [Statement]
+    public let statements: [StatementType]
     
-    public init(token: Token, statements: [Statement]) {
+    public init(token: Token, statements: [StatementType]) {
         self.token = token
         self.statements = statements
     }
 }
 
-extension BlockStatement: Statement {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension BlockStatement: StatementType {
     public var description: String {
         return statements.reduce("") { result, statement in
             result + statement.description
@@ -66,20 +60,16 @@ extension BlockStatement: Statement {
 public struct LetStatement {
     public let token: Token
     public let name: Identifier
-    public let value: Expression
+    public let value: ExpressionType
     
-    public init(token: Token, name: Identifier, value: Expression) {
+    public init(token: Token, name: Identifier, value: ExpressionType) {
         self.token = token
         self.name = name
         self.value = value
     }
 }
 
-extension LetStatement: Statement {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension LetStatement: StatementType {
     public var description: String {
         return "\(tokenLiteral) \(name.value) = \(value.description);"
     }
@@ -87,19 +77,15 @@ extension LetStatement: Statement {
 
 public struct ReturnStatement {
     public let token: Token
-    public let value: Expression
+    public let value: ExpressionType
     
-    public init(token: Token, value: Expression) {
+    public init(token: Token, value: ExpressionType) {
         self.token = token
         self.value = value
     }
 }
 
-extension ReturnStatement: Statement {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension ReturnStatement: StatementType {
     public var description: String {
         return "\(tokenLiteral) \(value.description);"
     }
@@ -107,19 +93,15 @@ extension ReturnStatement: Statement {
 
 public struct ExpressionStatement {
     public let token: Token
-    public let expression: Expression
+    public let expression: ExpressionType
     
-    public init(token: Token, expression: Expression) {
+    public init(token: Token, expression: ExpressionType) {
         self.token = token
         self.expression = expression
     }
 }
 
-extension ExpressionStatement: Statement {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension ExpressionStatement: StatementType {
     public var description: String {
         return expression.description
     }
@@ -128,20 +110,16 @@ extension ExpressionStatement: Statement {
 public struct PrefixExpression {
     public let token: Token
     public let `operator`: String // TODO enum
-    public let right: Expression
+    public let right: ExpressionType
     
-    public init(token: Token, operator: String, right: Expression) {
+    public init(token: Token, operator: String, right: ExpressionType) {
         self.token = token
         self.operator = `operator`
         self.right = right
     }
 }
 
-extension PrefixExpression: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension PrefixExpression: ExpressionType {
     public var description: String {
         return "(\(`operator`)\(right.description))"
     }
@@ -149,11 +127,11 @@ extension PrefixExpression: Expression {
 
 public struct InfixExpression {
     public let token: Token
-    public let left: Expression
+    public let left: ExpressionType
     public let `operator`: String
-    public let right: Expression
+    public let right: ExpressionType
     
-    public init(token: Token, left: Expression, right: Expression) {
+    public init(token: Token, left: ExpressionType, right: ExpressionType) {
         self.token = token
         self.left = left
         self.operator = token.literal
@@ -161,11 +139,7 @@ public struct InfixExpression {
     }
 }
 
-extension InfixExpression: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension InfixExpression: ExpressionType {
     public var description: String {
         return "(\(left.description) \(`operator`) \(right.description))"
     }
@@ -173,11 +147,11 @@ extension InfixExpression: Expression {
 
 public struct IfExpression {
     public let token: Token
-    public let condition: Expression
+    public let condition: ExpressionType
     public let consequence: BlockStatement
     public let alternative: BlockStatement?
     
-    public init(token: Token, condition: Expression, consequence: BlockStatement, alternative: BlockStatement?) {
+    public init(token: Token, condition: ExpressionType, consequence: BlockStatement, alternative: BlockStatement?) {
         self.token = token
         self.condition = condition
         self.consequence = consequence
@@ -185,11 +159,7 @@ public struct IfExpression {
     }
 }
 
-extension IfExpression: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension IfExpression: ExpressionType {
     public var description: String {
         var string = "if \(condition.description) \(consequence.description)"
         alternative.flatMap { string = string + "else \($0.description)" }
@@ -199,21 +169,17 @@ extension IfExpression: Expression {
 
 public struct CallExpression {
     public let token: Token
-    public let function: Expression
-    public let arguments: [Expression]
+    public let function: ExpressionType
+    public let arguments: [ExpressionType]
     
-    public init(token: Token, function: Expression, arguments: [Expression]) {
+    public init(token: Token, function: ExpressionType, arguments: [ExpressionType]) {
         self.token = token
         self.function = function
         self.arguments = arguments
     }
 }
 
-extension CallExpression: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension CallExpression: ExpressionType {
     public var description: String {
         let arguments = self.arguments.map { $0.description }.joined(separator: ", ")
         return "\(function.description)(\(arguments))"
@@ -231,11 +197,7 @@ public struct Identifier {
     }
 }
 
-extension Identifier: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension Identifier: ExpressionType {
     public var description: String {
         return value
     }
@@ -260,11 +222,7 @@ public struct FunctionLiteral {
     }
 }
 
-extension FunctionLiteral: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension FunctionLiteral: ExpressionType {
     public var description: String {
         let params = parameters.map { $0.description }.joined(separator: ", ")
         return "\(tokenLiteral)(\(params))\(body.description)"
@@ -281,11 +239,7 @@ public struct IntegerLiteral {
     }
 }
 
-extension IntegerLiteral: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension IntegerLiteral: ExpressionType {
     public var description: String {
         return token.literal
     }
@@ -301,11 +255,7 @@ public struct Boolean {
     }
 }
 
-extension Boolean: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension Boolean: ExpressionType {
     public var description: String {
         return token.literal
     }
@@ -321,11 +271,7 @@ public struct StringLiteral {
     }
 }
 
-extension StringLiteral: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension StringLiteral: ExpressionType {
     public var description: String {
         return tokenLiteral
     }
@@ -333,19 +279,15 @@ extension StringLiteral: Expression {
 
 public struct ArrayLiteral {
     public let token: Token
-    public let elements: [Expression]
+    public let elements: [ExpressionType]
     
-    public init(token: Token, elements: [Expression]) {
+    public init(token: Token, elements: [ExpressionType]) {
         self.token = token
         self.elements = elements
     }
 }
 
-extension ArrayLiteral: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension ArrayLiteral: ExpressionType {
     public var description: String {
         return "[\(elements.map { $0.description }.joined(separator: ", "))]"
     }
@@ -353,21 +295,17 @@ extension ArrayLiteral: Expression {
 
 public struct IndexExpression {
     public let token: Token
-    public let left: Expression
-    public let index: Expression
+    public let left: ExpressionType
+    public let index: ExpressionType
     
-    public init(token: Token, left: Expression, index: Expression) {
+    public init(token: Token, left: ExpressionType, index: ExpressionType) {
         self.token = token
         self.left = left
         self.index = index
     }
 }
 
-extension IndexExpression: Expression {
-    public var tokenLiteral: String {
-        return token.literal
-    }
-    
+extension IndexExpression: ExpressionType {
     public var description: String {
         return "(\(left.description)[\(index.description)])"
     }

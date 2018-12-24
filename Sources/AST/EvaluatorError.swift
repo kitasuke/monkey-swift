@@ -9,8 +9,8 @@ import Foundation
 import Sema
 
 public enum EvaluatorError: Error {
-    case unknownNode(Node)
-    case noValidExpression([Statement])
+    case unknownNode(NodeType)
+    case noValidExpression([StatementType])
     case typeMissMatch(left: ObjectType, operator: String, right: ObjectType)
     case unknownOperator(left: ObjectType?, operator: String, right: ObjectType)
     case notFunction(object: Object)

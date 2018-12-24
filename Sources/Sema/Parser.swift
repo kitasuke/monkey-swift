@@ -29,7 +29,7 @@ public final class Parser {
     }
     
     public func parse() throws -> Program {
-        var statements: [Statement] = []
+        var statements: [StatementType] = []
         
         while currentToken.type != .eof {
             if let statement = try parseStatement() {
@@ -46,7 +46,7 @@ public final class Parser {
         return Program(statements: statements)
     }
     
-    private func parseStatement() throws -> Statement? {
+    private func parseStatement() throws -> StatementType? {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
@@ -116,7 +116,7 @@ public final class Parser {
         let blockToken = currentToken
         setNextToken()
         
-        var statements = [Statement]()
+        var statements = [StatementType]()
         while !isCurrentToken(equalTo: .rightBrace) &&
             !isCurrentToken(equalTo: .eof) {
             if let statement = try parseStatement() {
@@ -128,8 +128,8 @@ public final class Parser {
         return BlockStatement(token: blockToken, statements: statements)
     }
     
-    private func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> Expression? {
-        var expression: Expression
+    private func parseExpression(for precedence: PrecedenceKind = .lowest) throws -> ExpressionType? {
+        var expression: ExpressionType
         guard let leftExpression = try parsePrefixOperator() else {
             return nil
         }
@@ -159,7 +159,7 @@ public final class Parser {
         return PrefixExpression(token: currentToken, operator: prefixToken.literal, right: right)
     }
     
-    private func parseGroupedExpression() throws -> Expression {
+    private func parseGroupedExpression() throws -> ExpressionType {
         // (
         setNextToken()
         
@@ -211,12 +211,12 @@ public final class Parser {
         return IfExpression(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
     }
     
-    private func parseCallExpression(with function: Expression) throws -> CallExpression {
+    private func parseCallExpression(with function: ExpressionType) throws -> CallExpression {
         let arguments = try parseExpressionList(until: .rightParen)
         return CallExpression(token: currentToken, function: function, arguments: arguments)
     }
     
-    private func parseIndexExpression(with left: Expression) throws -> IndexExpression {
+    private func parseIndexExpression(with left: ExpressionType) throws -> IndexExpression {
         let indexToken = currentToken
         
         // [
@@ -233,8 +233,8 @@ public final class Parser {
         return IndexExpression(token: indexToken, left: left, index: index)
     }
     
-    private func parseExpressionList(until end: TokenType) throws -> [Expression] {
-        var list: [Expression] = []
+    private func parseExpressionList(until end: TokenType) throws -> [ExpressionType] {
+        var list: [ExpressionType] = []
 
         // (
         guard !isPeekToken(equalTo: end) else {
@@ -267,7 +267,7 @@ public final class Parser {
         return list
     }
     
-    private func parsePrefixOperator() throws -> Expression? {
+    private func parsePrefixOperator() throws -> ExpressionType? {
         switch currentToken.type {
         case .identifier: return parseIdentifier()
         case .int: return parseIntegerLiteral()
@@ -282,7 +282,7 @@ public final class Parser {
         }
     }
     
-    private func parseInfixExpression(with left: Expression) throws -> InfixExpression {
+    private func parseInfixExpression(with left: ExpressionType) throws -> InfixExpression {
         // +
         let infixToken = currentToken
         
@@ -296,7 +296,7 @@ public final class Parser {
         return InfixExpression(token: infixToken, left: left, right: right)
     }
     
-    private func parseInfixOperator(with left: Expression) throws -> Expression? {
+    private func parseInfixOperator(with left: ExpressionType) throws -> ExpressionType? {
         switch peekToken.type {
         case .plus, .minus, .slash, .asterisk, .equal, .notEqual, .lessThan, .greaterThan:
             setNextToken()
