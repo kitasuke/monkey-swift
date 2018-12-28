@@ -1,11 +1,11 @@
 //
-//  ObjectType.swift
+//  ObjectKind.swift
 //  AST
 //
 //  Created by Yusuke Kita on 12/04/18.
 //
 
-public enum ObjectType: String {
+public enum ObjectKind: String {
     case integer
     case boolean
     case string
@@ -14,4 +14,5 @@ public enum ObjectType: String {
     case `return`
     case function
     case builtin
+    case hash
 }

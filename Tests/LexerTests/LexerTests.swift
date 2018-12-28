@@ -27,6 +27,7 @@ final class LexerTests: XCTestCase {
             "foobar"
 
             [1, 2];
+            {"foo": "bar"}
         """
         
         let expectedTokens: [Token] = [
@@ -38,7 +39,8 @@ final class LexerTests: XCTestCase {
             .makeNumber(number: "5"), .init(type: .lessThan), .makeNumber(number: "10"), .init(type: .greaterThan), .makeNumber(number: "5"), .init(type: .semicolon),
             .init(type: .let), .makeIdentifier(identifier: "two"), .init(type: .assign), .makeString(string: "two"), .init(type: .semicolon),
             .makeString(string: "foobar"),
-            .init(type: .leftBracket), .makeNumber(number: "1"), .init(type: .comma), .makeNumber(number: "2"), .init(type: .rightBracket), .init(type: .semicolon)
+            .init(type: .leftBracket), .makeNumber(number: "1"), .init(type: .comma), .makeNumber(number: "2"), .init(type: .rightBracket), .init(type: .semicolon),
+            .init(type: .leftBrace), .makeString(string: "foo"), .init(type: .colon), .makeString(string: "bar"), .init(type: .rightBrace)
         ]
 
         let lexer = Lexer(input: input)

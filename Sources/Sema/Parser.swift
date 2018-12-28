@@ -278,6 +278,7 @@ public final class Parser {
         case .if: return try parseIfExpression()
         case .function: return try parseFunctionLiteral()
         case .leftBracket: return try parseArrayLiteral()
+        case .leftBrace: return try parseDictionaryLiteral()
         default: return nil
         }
     }
@@ -375,6 +376,40 @@ public final class Parser {
         let arrayToken = currentToken
         let elements = try parseExpressionList(until: .rightBracket)
         return ArrayLiteral(token: arrayToken, elements:elements)
+    }
+    
+    private func parseDictionaryLiteral() throws -> HashLiteral {
+        let dictionaryToken = currentToken
+        var pairs: [HashLiteral.HashPair] = []
+        while !isPeekToken(equalTo: .rightBrace) {
+            // {
+            setNextToken()
+            
+            // foo
+            guard let key = try parseExpression() else {
+                throw ParserError.expressionParsingFailed(token: currentToken)
+            }
+            
+            // :
+            try setNextToken(expects: .colon)
+            
+            // bar
+            setNextToken()
+            guard let value = try parseExpression() else {
+                throw ParserError.expressionParsingFailed(token: currentToken)
+            }
+            pairs.append(HashLiteral.HashPair(key: key, value: value))
+            
+            if !isPeekToken(equalTo: .rightBrace) {
+                // ,
+                try setNextToken(expects: .comma)
+            }
+        }
+        
+        // }
+        try setNextToken(expects: .rightBrace)
+        
+        return HashLiteral(token: dictionaryToken, pairs: pairs)
     }
 
     private func setNextToken() {

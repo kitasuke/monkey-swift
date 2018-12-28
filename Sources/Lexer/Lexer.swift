@@ -47,6 +47,8 @@ public final class Lexer {
             tokenType = .slash
         case ",":
             tokenType = .comma
+        case ":":
+            tokenType = .colon
         case ";":
             tokenType = .semicolon
         case "<":

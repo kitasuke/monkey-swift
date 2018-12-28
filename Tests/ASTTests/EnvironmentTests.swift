@@ -14,8 +14,8 @@ import AST
 final class EnvironmentTests: XCTestCase {
     func test_getObject() {
         let mockIdentifier = Identifier(token: .makeIdentifier(identifier: "foo"))
-        let mockValue = Integer(value: 5)
-        let mockObjects: [Identifier: Object] = [
+        let mockValue = IntegerObject(value: 5)
+        let mockObjects: [Identifier: ObjectType] = [
             mockIdentifier: mockValue,
         ]
         let mockEnvironment = MockEnvironment(objects: mockObjects)
@@ -30,7 +30,7 @@ final class EnvironmentTests: XCTestCase {
         let mockEnvironment = MockEnvironment(objects: [:])
 
         let mockIdentifier = Identifier(token: .makeIdentifier(identifier: "foo"))
-        let mockValue = Integer(value: 5)
+        let mockValue = IntegerObject(value: 5)
         
         XCTAssertNil(mockEnvironment.object(for: mockIdentifier), "environment.object(for: foo) should be nil")
         
@@ -45,18 +45,18 @@ final class EnvironmentTests: XCTestCase {
 
 final class MockEnvironment: EnvironmentType {
     let outer: EnvironmentType?
-    var storedObjects: [Identifier : Object]
+    var storedObjects: [Identifier : ObjectType]
     
-    init(objects: [Identifier: Object], outer: EnvironmentType? = nil) {
+    init(objects: [Identifier: ObjectType], outer: EnvironmentType? = nil) {
         self.outer = outer
         storedObjects = objects
     }
     
-    func object(for identifier: Identifier) -> Object? {
+    func object(for identifier: Identifier) -> ObjectType? {
         return storedObjects[identifier]
     }
     
-    func set(_ object: Object, for identifier: Identifier) {
+    func set(_ object: ObjectType, for identifier: Identifier) {
         storedObjects[identifier] = object
     }
 }

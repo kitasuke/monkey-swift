@@ -11,11 +11,11 @@ import Sema
 public enum EvaluatorError: Error {
     case unknownNode(NodeType)
     case noValidExpression([StatementType])
-    case typeMissMatch(left: ObjectType, operator: String, right: ObjectType)
-    case unknownOperator(left: ObjectType?, operator: String, right: ObjectType)
-    case notFunction(object: Object)
-    case unsupportedArgument(for: BuiltinIdentifier, argument: Object)
-    case unsupportedIndexOperator(index: Object, left: Object)
+    case typeMissMatch(left: ObjectKind, operator: String, right: ObjectKind)
+    case unknownOperator(left: ObjectKind?, operator: String, right: ObjectKind)
+    case notFunction(object: ObjectType)
+    case unsupportedArgument(for: BuiltinIdentifier, argument: ObjectType)
+    case unsupportedIndexOperator(index: ObjectType, left: ObjectType)
     case wrongNumberArguments(count: Int)
 }
 
@@ -33,11 +33,11 @@ extension EvaluatorError: CustomStringConvertible {
         case .unknownOperator(_, let `operator`, let right):
             return "unknown operator: \(`operator`)\(right)"
         case .notFunction(let object):
-            return "not a function: \(object.type)"
+            return "not a function: \(object.kind)"
         case .unsupportedArgument(let builtinIdentifier, let argument):
             return "argument \(type(of: argument)) to \(builtinIdentifier.rawValue) not supported"
         case .unsupportedIndexOperator(let index, let left):
-            return "index operator \(index.type) not supported \(left.type)"
+            return "index operator \(index.kind) not supported \(left.kind)"
         case .wrongNumberArguments(let count):
             return "wrong number of arguments. got=\(count)"
         }

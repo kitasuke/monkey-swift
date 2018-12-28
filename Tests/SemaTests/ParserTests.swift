@@ -300,6 +300,78 @@ final class ParserTests: XCTestCase {
         testInfixExpression(indexExpression.index, leftValue: 1, operator: "+", rightValue: 1)
     }
     
+    func test_parsingDictionaryLiteralsStringKeys() {
+        let input = """
+            {"one": 1, "two": 2, "three": 3}
+        """
+        
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let dictionary = statement.expression as? HashLiteral else {
+            XCTFail("statement.expression not \(HashLiteral.self). got=\(type(of: statement.expression))")
+            return
+        }
+        
+        XCTAssertTrue(dictionary.pairs.count == 3, "dictionary.pairs.count wrong. got=\(dictionary.pairs.count)")
+        
+        let expected: [String: Int64] = ["one": 1, "two": 2, "three": 3]
+        
+        dictionary.pairs.forEach {
+            guard let string = $0.key as? StringLiteral else {
+                XCTFail("dictionary.pair.key not \(StringLiteral.self). got=\(type(of: $0.key))")
+                return
+            }
+            
+            testIntegerLiteral(Int64(expected[string.value]!), with: $0.value)
+        }
+    }
+    
+    func test_parsingEmptyDictionaryLiteral() {
+        let input = "{}"
+        
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let dictionary = statement.expression as? HashLiteral else {
+            XCTFail("statement.expression not \(HashLiteral.self). got=\(type(of: statement.expression))")
+            return
+        }
+        XCTAssertTrue(dictionary.pairs.isEmpty)
+    }
+    
+    func test_parsingDictionaryLiteralWithExpressions() {
+        let input = """
+            {"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}
+        """
+        
+        let program = makeProgram(from: input)
+        let statement = makeExpressionStatement(from: program)
+        
+        guard let dictionary = statement.expression as? HashLiteral else {
+            XCTFail("statement.expression not \(HashLiteral.self). got=\(type(of: statement.expression))")
+            return
+        }
+        
+        XCTAssertTrue(dictionary.pairs.count == 3, "dictionary.pairs.count wrong. got=\(dictionary.pairs.count)")
+        
+        let expected: [String: (left: Int64, `operator`: String, right: Int64)] = [
+            "one": (left: 0, operator: "+", right: 1),
+            "two": (left: 10, operator: "-", right: 8),
+            "three": (left: 15, operator: "/", right: 5)
+        ]
+        
+        dictionary.pairs.forEach {
+            guard let string = $0.key as? StringLiteral else {
+                XCTFail("dictionary.pair.key not \(StringLiteral.self). got=\(type(of: $0))")
+                return
+            }
+            
+            let infix = expected[string.value]!
+            testInfixExpression($0.value, leftValue: infix.left, operator: infix.operator, rightValue: infix.right)
+        }
+    }
+    
     private func testLetStatement(_ statement: StatementType, name: String) {
         guard statement.tokenLiteral == Token(type: .let).literal else {
             XCTFail("tokenLiteral not \(Token(type: .let).literal). got=\(statement.tokenLiteral)")

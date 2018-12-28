@@ -310,3 +310,21 @@ extension IndexExpression: ExpressionType {
         return "(\(left.description)[\(index.description)])"
     }
 }
+
+public struct HashLiteral {
+    public typealias HashPair = (key: ExpressionType, value: ExpressionType)
+    public let token: Token
+    public let pairs: [HashPair]
+
+    public init(token: Token, pairs: [HashPair]) {
+        self.token = token
+        self.pairs = pairs
+    }
+}
+
+extension HashLiteral: ExpressionType {
+    public var description: String {
+        let elements = pairs.map { "\($0.key.description): \($0.value.description)" }.joined(separator: ", ")
+        return "{\(elements)}"
+    }
+}

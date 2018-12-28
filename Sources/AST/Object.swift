@@ -7,8 +7,8 @@
 
 import Sema
 
-public protocol Object: CustomStringConvertible {
-    var type: ObjectType { get }
+public protocol ObjectType: CustomStringConvertible {
+    var kind: ObjectKind { get }
 }
 
 public struct IntegerObject {
@@ -19,13 +19,20 @@ public struct IntegerObject {
     }
 }
 
-extension IntegerObject: Object {
-    public var type: ObjectType {
+extension IntegerObject: ObjectType {
+    public var kind: ObjectKind {
         return .integer
     }
     
     public var description: String {
         return "\(value)"
+    }
+}
+
+extension IntegerObject: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(value)
     }
 }
 
@@ -37,13 +44,20 @@ public struct BooleanObject {
     }
 }
 
-extension BooleanObject: Object {
-    public var type: ObjectType {
+extension BooleanObject: ObjectType {
+    public var kind: ObjectKind {
         return .boolean
     }
     
     public var description: String {
         return "\(value)"
+    }
+}
+
+extension BooleanObject: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(value)
     }
 }
 
@@ -55,8 +69,8 @@ public struct StringObject {
     }
 }
 
-extension StringObject: Object {
-    public var type: ObjectType {
+extension StringObject: ObjectType {
+    public var kind: ObjectKind {
         return .string
     }
     
@@ -65,28 +79,35 @@ extension StringObject: Object {
     }
 }
 
+extension StringObject: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(value)
+    }
+}
+
 public struct Null {}
 
-extension Null: Object {
-    public var type: ObjectType {
+extension Null: ObjectType {
+    public var kind: ObjectKind {
         return .null
     }
     
     public var description: String {
-        return type.rawValue
+        return kind.rawValue
     }
 }
 
 public struct ReturnValue {
-    public let value: Object
+    public let value: ObjectType
     
-    public init(value: Object) {
+    public init(value: ObjectType) {
         self.value = value
     }
 }
 
-extension ReturnValue: Object {
-    public var type: ObjectType {
+extension ReturnValue: ObjectType {
+    public var kind: ObjectKind {
         return .return
     }
     
@@ -107,8 +128,8 @@ public struct Function {
     }
 }
 
-extension Function: Object {
-    public var type: ObjectType {
+extension Function: ObjectType {
+    public var kind: ObjectKind {
         return .function
     }
     
@@ -120,14 +141,14 @@ extension Function: Object {
 
 public protocol BuiltinFunctionType {
     associatedtype Argument
-    typealias BuiltinFunction = (Argument) throws -> Object
+    typealias BuiltinFunction = (Argument) throws -> ObjectType
     
     var builtinFunction: BuiltinFunction { get }
 }
 
 public struct SingleArgumentBuiltinFunction: BuiltinFunctionType {
     
-    public typealias Argument = Object
+    public typealias Argument = ObjectType
     
     public let builtinFunction: BuiltinFunction
     
@@ -137,7 +158,7 @@ public struct SingleArgumentBuiltinFunction: BuiltinFunctionType {
 }
 
 public struct MultipleArgumentsBuiltinFunction: BuiltinFunctionType {
-    public typealias Argument = [Object]
+    public typealias Argument = [ObjectType]
     
     public let builtinFunction: BuiltinFunction
     
@@ -160,8 +181,8 @@ public struct AnyBuiltinFunction<T>: BuiltinFunctionType {
     }
 }
 
-extension AnyBuiltinFunction: Object {
-    public var type: ObjectType {
+extension AnyBuiltinFunction: ObjectType {
+    public var kind: ObjectKind {
         return .builtin
     }
     
@@ -171,19 +192,49 @@ extension AnyBuiltinFunction: Object {
 }
 
 public struct ArrayObject {
-    public let elements: [Object]
+    public let elements: [ObjectType]
     
-    public init(elements: [Object]) {
+    public init(elements: [ObjectType]) {
         self.elements = elements
     }
 }
 
-extension ArrayObject: Object {
-    public var type: ObjectType {
+extension ArrayObject: ObjectType {
+    public var kind: ObjectKind {
         return .array
     }
     
     public var description: String {
-        return "[\(elements.map { $0.description }.joined(separator: ", "))]"
+        let elementsString = elements.map { $0.description }.joined(separator: ", ")
+        return "[\(elementsString)]"
+    }
+}
+
+public struct HashPair {
+    public let key: ObjectType
+    public let value: ObjectType
+    
+    public init(key: ObjectType, value: ObjectType) {
+        self.key = key
+        self.value = value
+    }
+}
+
+public struct HashObject {
+    public let pairs: [HashPair]
+    
+    public init(pairs: [HashPair]) {
+        self.pairs = pairs
+    }
+}
+
+extension HashObject: ObjectType {
+    public var kind: ObjectKind {
+        return .hash
+    }
+    
+    public var description: String {
+        let pairsString = pairs.map { "\($0.key.description): \($0.value.description)" }.joined(separator: ", ")
+        return "[\(pairsString)]"
     }
 }

@@ -9,16 +9,16 @@ import Sema
 
 public protocol EnvironmentType {
     var outer: EnvironmentType? { get }
-    var storedObjects: [Identifier: Object] { get }
+    var storedObjects: [Identifier: ObjectType] { get }
     
-    func object(for identifier: Identifier) -> Object?
-    func set(_ object: Object, for identifier: Identifier)
+    func object(for identifier: Identifier) -> ObjectType?
+    func set(_ object: ObjectType, for identifier: Identifier)
 }
 
 public final class Environment: EnvironmentType {
     
     public let outer: EnvironmentType?
-    public internal(set) var storedObjects: [Identifier: Object]
+    public internal(set) var storedObjects: [Identifier: ObjectType]
     
     public init() {
         outer = nil
@@ -30,14 +30,14 @@ public final class Environment: EnvironmentType {
         storedObjects = [:]
     }
     
-    public func object(for identifier: Identifier) -> Object? {
+    public func object(for identifier: Identifier) -> ObjectType? {
         guard let object = storedObjects[identifier] else {
             return outer?.object(for: identifier)
         }
         return object
     }
     
-    public func set(_ object: Object, for identifier: Identifier) {
+    public func set(_ object: ObjectType, for identifier: Identifier) {
         storedObjects[identifier] = object
     }
 }

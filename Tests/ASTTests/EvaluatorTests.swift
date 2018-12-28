@@ -11,9 +11,6 @@ import Lexer
 import Sema
 import AST
 
-typealias Integer = AST.IntegerObject
-typealias Boolean = AST.BooleanObject
-
 final class EvaluatorTests: XCTestCase {
     func test_evaluateIntegerExpression() {
         let tests: [(input: String, expected: Int64)] = [
@@ -183,15 +180,15 @@ final class EvaluatorTests: XCTestCase {
              expected: EvaluatorError.unknownOperator(left: .boolean, operator: "+", right: .boolean)),
             (input: "foobar", expected: EvaluatorError.unknownNode(Identifier(token: .makeIdentifier(identifier: "foobar")))),
             (input: "\"Hello\" - \"World\"", expected: EvaluatorError.unknownOperator(left: .string, operator: "-", right: .string)),
-            (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: Integer(value: 1))),
+            (input: "len(1)", expected: EvaluatorError.unsupportedArgument(for: .len, argument: IntegerObject(value: 1))),
             (input: "len([], [1])", expected: EvaluatorError.wrongNumberArguments(count: 2)),
-            (input: "first(1)", expected: EvaluatorError.unsupportedArgument(for: .first, argument: Integer(value: 1))),
+            (input: "first(1)", expected: EvaluatorError.unsupportedArgument(for: .first, argument: IntegerObject(value: 1))),
             (input: "first(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
-            (input: "last(1)", expected: EvaluatorError.unsupportedArgument(for: .last, argument: Integer(value: 1))),
+            (input: "last(1)", expected: EvaluatorError.unsupportedArgument(for: .last, argument: IntegerObject(value: 1))),
             (input: "last(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
-            (input: "rest(1)", expected: EvaluatorError.unsupportedArgument(for: .rest, argument: Integer(value: 1))),
+            (input: "rest(1)", expected: EvaluatorError.unsupportedArgument(for: .rest, argument: IntegerObject(value: 1))),
             (input: "rest(1, 2)", expected: EvaluatorError.wrongNumberArguments(count: 2)),
-            (input: "push(1, 2)", expected: EvaluatorError.unsupportedArgument(for: .push, argument: Integer(value: 1))),
+            (input: "push(1, 2)", expected: EvaluatorError.unsupportedArgument(for: .push, argument: IntegerObject(value: 1))),
             (input: "push(1)", expected: EvaluatorError.wrongNumberArguments(count: 1))
         ]
         
@@ -301,25 +298,60 @@ final class EvaluatorTests: XCTestCase {
         }
     }
     
-    private func testIntegerObject(_ object: Object, expected: Int64) {
-        guard let integer = object as? Integer else {
-            XCTFail("object not \(Integer.self). got=\(type(of: object))")
+    func test_hashLiteral() {
+        let input = """
+            let two = "two";
+            {
+                "one": 10 - 9,
+                two: 1 + 1,
+                "thr" + "ee": 6 / 2,
+                4: 4,
+                true: 5,
+                false: 6
+            }
+        """
+        
+        let object = makeObject(from: input)
+        guard let hash = object as? HashObject else {
+            XCTFail("object not \(HashObject.self). got=\(type(of: object))")
+            return
+        }
+        
+        let expected: [HashPair] = [
+            .init(key: StringObject(value: "one"), value: IntegerObject(value: 1)),
+            .init(key: StringObject(value: "two"), value: IntegerObject(value: 2)),
+            .init(key: StringObject(value: "three"), value: IntegerObject(value: 3)),
+            .init(key: IntegerObject(value: 4), value: IntegerObject(value: 4)),
+            .init(key: BooleanObject(value: true), value: IntegerObject(value: 5)),
+            .init(key: BooleanObject(value: false), value: IntegerObject(value: 6)),
+        ]
+        
+        XCTAssertTrue(hash.pairs.count == expected.count, "hash.pairs.count wrong. got=\(hash.pairs.count), want=\(expected.count)")
+        
+        for (index, pair) in hash.pairs.enumerated() {
+            testIntegerObject(pair.value, expected: (expected[index].value as! IntegerObject).value)
+        }
+    }
+    
+    private func testIntegerObject(_ object: ObjectType, expected: Int64) {
+        guard let integer = object as? IntegerObject else {
+            XCTFail("object not \(IntegerObject.self). got=\(type(of: object))")
             return
         }
         
         XCTAssertTrue(integer.value == expected, "integer.value wrong. want=\(expected), got=\(integer.value)")
     }
     
-    private func testBooleanObject(_ object: Object, expected: Bool) {
-        guard let boolean = object as? Boolean else {
-            XCTFail("object not \(Boolean.self). got=\(type(of: object))")
+    private func testBooleanObject(_ object: ObjectType, expected: Bool) {
+        guard let boolean = object as? BooleanObject else {
+            XCTFail("object not \(BooleanObject.self). got=\(type(of: object))")
             return
         }
         
         XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
     }
     
-    private func testStringObject(_ object: Object, expected: String) {
+    private func testStringObject(_ object: ObjectType, expected: String) {
         guard let stringObject = object as? StringObject else {
             XCTFail("object not \(StringObject.self). got=\(type(of: object))")
             return
@@ -328,8 +360,8 @@ final class EvaluatorTests: XCTestCase {
         XCTAssertTrue(stringObject.value == expected, "stringObject.value wrong. want=\(expected), got=\(stringObject.value)")
     }
     
-    private func testNullObject(_ object: Object) {
-        XCTAssertTrue(object.type == .null, "")
+    private func testNullObject(_ object: ObjectType) {
+        XCTAssertTrue(object.kind == .null, "")
     }
     
     private func makeProgram(from input: String) -> Program {
@@ -347,8 +379,8 @@ final class EvaluatorTests: XCTestCase {
         return program
     }
     
-    private func makeObject(from program: Program) -> Object {
-        let object: Object
+    private func makeObject(from program: Program) -> ObjectType {
+        let object: ObjectType
         do {
             let environment = Environment()
             let evaluator = Evaluator()
@@ -361,7 +393,7 @@ final class EvaluatorTests: XCTestCase {
         return object
     }
     
-    private func makeObject(from input: String) -> Object {
+    private func makeObject(from input: String) -> ObjectType {
         let program = makeProgram(from: input)
         let object = makeObject(from: program)
         return object

@@ -13,6 +13,7 @@ public enum TokenSymbol: Character {
     case asterisk = "*"
     case slash = "/"
     case comma = ","
+    case colon = ":"
     case semicolon = ";"
     case leftParen = "("
     case rightParen = ")"

@@ -12,7 +12,7 @@ public enum TokenType {
     case identifier, int, string
     
     // Operators
-    case assign, plus, minus, bang, asterisk, slash, comma, semicolon, lessThan, greaterThan, equal, notEqual
+    case assign, plus, minus, bang, asterisk, slash, comma, colon, semicolon, lessThan, greaterThan, equal, notEqual
     
     case leftParen, rightParen, leftBrace, rightBrace, leftBracket, rightBracket
     
@@ -33,6 +33,7 @@ public enum TokenType {
         case .asterisk: self = .asterisk
         case .slash: self = .slash
         case .comma: self = .comma
+        case .colon: self = .colon
         case .semicolon: self = .semicolon
         case .lessThan: self = .lessThan
         case .greaterThan: self = .greaterThan
@@ -93,6 +94,7 @@ public struct Token {
         case .asterisk: literal = String(TokenSymbol.asterisk.rawValue)
         case .slash: literal = String(TokenSymbol.slash.rawValue)
         case .comma: literal = String(TokenSymbol.comma.rawValue)
+        case .colon: literal = String(TokenSymbol.colon.rawValue)
         case .semicolon: literal = String(TokenSymbol.semicolon.rawValue)
         case .lessThan: literal = String(TokenSymbol.lessThan.rawValue)
         case .greaterThan: literal = String(TokenSymbol.greaterThan.rawValue)

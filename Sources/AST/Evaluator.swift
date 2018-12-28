@@ -16,7 +16,7 @@ public final class Evaluator {
     
     public init() {}
     
-    public func evaluate(node: NodeType, with environment: EnvironmentType) throws -> Object {
+    public func evaluate(node: NodeType, with environment: EnvironmentType) throws -> ObjectType {
         switch node {
         case let program as Program:
             return try evaluate(program: program, with: environment)
@@ -61,13 +61,21 @@ public final class Evaluator {
         case let arrayLiteral as ArrayLiteral:
             let elements = try arrayLiteral.elements.map { try evaluate(node: $0, with: environment) }
             return ArrayObject(elements: elements)
+        case let hashLiteral as HashLiteral:
+            let pairs = try hashLiteral.pairs.map { pair -> HashPair in
+                return HashPair(
+                    key: try evaluate(node: pair.key, with: environment),
+                    value: try evaluate(node: pair.value, with: environment)
+                )
+            }
+            return HashObject(pairs: pairs)
         default:
             throw EvaluatorError.unknownNode(node)
         }
     }
     
-    private func evaluate(program: Program, with environment: EnvironmentType) throws -> Object {
-        var object: Object?
+    private func evaluate(program: Program, with environment: EnvironmentType) throws -> ObjectType {
+        var object: ObjectType?
         for statement in program.statements {
             object = try evaluate(node: statement, with: environment)
             
@@ -82,8 +90,8 @@ public final class Evaluator {
         return result
     }
     
-    private func evaluate(blockStatement: BlockStatement, with environment: EnvironmentType) throws -> Object {
-        var object: Object?
+    private func evaluate(blockStatement: BlockStatement, with environment: EnvironmentType) throws -> ObjectType {
+        var object: ObjectType?
         for statement in blockStatement.statements {
             object = try evaluate(node: statement, with: environment)
             
@@ -98,18 +106,18 @@ public final class Evaluator {
         return result
     }
     
-    private func evaluatePrefixExpression(operator: String, right: Object) throws -> Object {
+    private func evaluatePrefixExpression(operator: String, right: ObjectType) throws -> ObjectType {
         switch `operator` {
         case Token(type: .bang).literal:
             return evaluate(bangPrefixOperatorExpression: right)
         case Token(type: .minus).literal:
             return try evaluate(minusPrefixOperatorExpression: right)
         default:
-            throw EvaluatorError.unknownOperator(left: nil, operator: `operator`, right: right.type)
+            throw EvaluatorError.unknownOperator(left: nil, operator: `operator`, right: right.kind)
         }
     }
     
-    private func evaluate(bangPrefixOperatorExpression object: Object) -> Object {
+    private func evaluate(bangPrefixOperatorExpression object: ObjectType) -> ObjectType {
         switch object {
         case let boolean as BooleanObject where boolean.value:
             return `false`
@@ -122,16 +130,16 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(minusPrefixOperatorExpression object: Object) throws -> Object {
-        guard object.type == .integer,
+    private func evaluate(minusPrefixOperatorExpression object: ObjectType) throws -> ObjectType {
+        guard object.kind == .integer,
             let integer = object as? IntegerObject else {
-            throw EvaluatorError.unknownOperator(left: nil, operator: Token(type: .minus).literal, right: object.type)
+            throw EvaluatorError.unknownOperator(left: nil, operator: Token(type: .minus).literal, right: object.kind)
         }
         
         return IntegerObject(value: -integer.value)
     }
     
-    private func evaluateInfixExpression(operator: String, left: Object, right: Object) throws -> Object {
+    private func evaluateInfixExpression(operator: String, left: ObjectType, right: ObjectType) throws -> ObjectType {
         switch (left, right) {
         case (let leftInteger as IntegerObject, let rightInteger as IntegerObject):
             return try evaluateIntegerInfixExpression(left: leftInteger, operator: `operator`, right: rightInteger)
@@ -141,14 +149,14 @@ public final class Evaluator {
             return toBooleanObject(from: leftBoolean.value != rightBoolean.value)
         case (let leftString as StringObject, let rightString as StringObject):
             return try evaluateStringInfixExpression(left: leftString, operator: `operator`, right: rightString)
-        case _ where left.type != right.type:
-            throw EvaluatorError.typeMissMatch(left: left.type, operator: `operator`, right: right.type)
+        case _ where left.kind != right.kind:
+            throw EvaluatorError.typeMissMatch(left: left.kind, operator: `operator`, right: right.kind)
         default:
-            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+            throw EvaluatorError.unknownOperator(left: left.kind, operator: `operator`, right: right.kind)
         }
     }
     
-    private func evaluateIntegerInfixExpression(left: IntegerObject, operator: String, right: IntegerObject) throws -> Object {
+    private func evaluateIntegerInfixExpression(left: IntegerObject, operator: String, right: IntegerObject) throws -> ObjectType {
         switch `operator` {
         case Token(type: .plus).literal:
             return IntegerObject(value: left.value + right.value)
@@ -167,25 +175,25 @@ public final class Evaluator {
         case Token(type: .notEqual).literal:
             return toBooleanObject(from: left.value != right.value)
         default:
-            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+            throw EvaluatorError.unknownOperator(left: left.kind, operator: `operator`, right: right.kind)
         }
     }
     
-    private func evaluateStringInfixExpression(left: StringObject, operator: String, right: StringObject) throws -> Object {
+    private func evaluateStringInfixExpression(left: StringObject, operator: String, right: StringObject) throws -> ObjectType {
         switch `operator` {
         case Token(type: .plus).literal:
             return StringObject(value: left.value + right.value)
         default:
-            throw EvaluatorError.unknownOperator(left: left.type, operator: `operator`, right: right.type)
+            throw EvaluatorError.unknownOperator(left: left.kind, operator: `operator`, right: right.kind)
         }
     }
     
-    private func evaluate(ifExpression: IfExpression, with environment: EnvironmentType) throws -> Object {
+    private func evaluate(ifExpression: IfExpression, with environment: EnvironmentType) throws -> ObjectType {
         let condition = try evaluate(node: ifExpression.condition, with: environment)
         
-        let isTruthy: (Object) -> Bool = { object in
+        let isTruthy: (ObjectType) -> Bool = { object in
             switch object {
-            case _ where object.type == .null: return false
+            case _ where object.kind == .null: return false
             case let boolean as BooleanObject where boolean.value: return true
             case let boolean as BooleanObject where !boolean.value: return false
             default: return true
@@ -201,11 +209,11 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(expressions: [ExpressionType], with environment: EnvironmentType) throws -> [Object] {
+    private func evaluate(expressions: [ExpressionType], with environment: EnvironmentType) throws -> [ObjectType] {
         return try expressions.map { try evaluate(node: $0, with: environment) }
     }
     
-    private func evaluate(indexExpression index: Object, left: Object) throws -> Object {
+    private func evaluate(indexExpression index: ObjectType, left: ObjectType) throws -> ObjectType {
         switch (left, index) {
         case (let array as ArrayObject, let integer as IntegerObject):
             return evaluate(arrayIndexExpression: integer, left: array)
@@ -214,7 +222,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(arrayIndexExpression index: IntegerObject, left: ArrayObject) -> Object {
+    private func evaluate(arrayIndexExpression index: IntegerObject, left: ArrayObject) -> ObjectType {
         guard index.value >= 0 && index.value < left.elements.count else {
             return null
         }
@@ -222,7 +230,7 @@ public final class Evaluator {
         return left.elements[Int(index.value)]
     }
     
-    private func evaluate(identifier: Identifier, with environment: EnvironmentType) throws -> Object {
+    private func evaluate(identifier: Identifier, with environment: EnvironmentType) throws -> ObjectType {
         if let value = environment.object(for: identifier) {
             return value
         }
@@ -248,7 +256,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluateLen(argument: Object) throws -> IntegerObject {
+    private func evaluateLen(argument: ObjectType) throws -> IntegerObject {
         switch argument {
         case let string as StringObject:
             return IntegerObject(value: Int64(string.value.count))
@@ -259,7 +267,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluateFirst(argument: Object) throws -> Object {
+    private func evaluateFirst(argument: ObjectType) throws -> ObjectType {
         switch argument {
         case let array as ArrayObject:
             return array.elements.isEmpty ? null : array.elements[0]
@@ -268,7 +276,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluateLast(argument: Object) throws -> Object {
+    private func evaluateLast(argument: ObjectType) throws -> ObjectType {
         switch argument {
         case let array as ArrayObject:
             return array.elements.isEmpty ? null : array.elements.last!
@@ -277,7 +285,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluateRest(argument: Object) throws -> Object {
+    private func evaluateRest(argument: ObjectType) throws -> ObjectType {
         switch argument {
         case let array as ArrayObject:
             return array.elements.isEmpty ? null : ArrayObject(elements: Array(array.elements.dropFirst()))
@@ -286,7 +294,7 @@ public final class Evaluator {
         }
     }
     
-    private func evaluatePush(arguments: [Object]) throws -> Object {
+    private func evaluatePush(arguments: [ObjectType]) throws -> ObjectType {
         guard arguments.count == 2 else {
             throw EvaluatorError.wrongNumberArguments(count: arguments.count)
         }
@@ -299,25 +307,25 @@ public final class Evaluator {
         }
     }
     
-    private func apply(function object: Object, arguments: [Object]) throws -> Object {
+    private func apply(function object: ObjectType, arguments: [ObjectType]) throws -> ObjectType {
         switch object {
         case let function as Function:
             let environment = extendedEnvironment(from: function, arguments: arguments)
             let value = try evaluate(node: function.body, with: environment)
             return unwrap(returnValue: value)
-        case let function as AnyBuiltinFunction<Object>:
+        case let function as AnyBuiltinFunction<ObjectType>:
             guard arguments.count == 1 else {
                 throw EvaluatorError.wrongNumberArguments(count: arguments.count)
             }
             return try function.builtinFunction(arguments[0])
-        case let function as AnyBuiltinFunction<[Object]>:
+        case let function as AnyBuiltinFunction<[ObjectType]>:
             return try function.builtinFunction(arguments)
         default:
             throw EvaluatorError.notFunction(object: object)
         }
     }
     
-    private func extendedEnvironment(from function: Function, arguments: [Object]) -> EnvironmentType {
+    private func extendedEnvironment(from function: Function, arguments: [ObjectType]) -> EnvironmentType {
         let environment = Environment(outer: function.environment)
         
         for (index, parameter) in function.parameters.enumerated() {
@@ -326,7 +334,7 @@ public final class Evaluator {
         return environment
     }
     
-    private func unwrap(returnValue object: Object) -> Object {
+    private func unwrap(returnValue object: ObjectType) -> ObjectType {
         guard let returnValue = object as? ReturnValue else {
             return object
         }
