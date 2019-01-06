@@ -36,6 +36,8 @@ extension IntegerObject: Hashable {
     }
 }
 
+extension IntegerObject: AnyHashableConvertible {}
+
 public struct BooleanObject {
     public let value: Bool
     
@@ -61,6 +63,8 @@ extension BooleanObject: Hashable {
     }
 }
 
+extension BooleanObject: AnyHashableConvertible {}
+
 public struct StringObject {
     public let value: String
     
@@ -84,6 +88,31 @@ extension StringObject: Hashable {
         hasher.combine(kind)
         hasher.combine(value)
     }
+}
+
+extension StringObject: AnyHashableConvertible {}
+
+protocol RawObjectConvertible {
+    associatedtype Object
+    func map<Object>(_ transform: (Self) -> Object) -> Object
+}
+
+extension RawObjectConvertible {
+    func map<Object>(_ transform: (Self) -> Object) -> Object {
+        return transform(self)
+    }
+}
+
+extension Int64: RawObjectConvertible {
+    typealias Object = IntegerObject
+}
+
+extension Bool: RawObjectConvertible {
+    typealias Object = BooleanObject
+}
+
+extension String: RawObjectConvertible {
+    typealias Object = StringObject
 }
 
 public struct Null {}
@@ -210,11 +239,53 @@ extension ArrayObject: ObjectType {
     }
 }
 
+public struct AnyHashableObject {
+    public var hashableBase: AnyHashable {
+        return _base()
+    }
+    public var base: ObjectType {
+        return hashableBase.base as! ObjectType
+    }
+    private let _base: () -> AnyHashable
+    
+    public init<T: ObjectType>(_ base: T) where T: Hashable {
+        self._base = { AnyHashable(base) }
+    }
+    
+    public func unwrap() -> ObjectType {
+        var object = base
+        while let innerObject = object as? AnyHashableObject {
+            object = innerObject.base
+        }
+        return object
+    }
+}
+
+extension AnyHashableObject: ObjectType {
+    public var kind: ObjectKind {
+        return base.kind
+    }
+    
+    public var description: String {
+        return base.description
+    }
+}
+
+public protocol AnyHashableConvertible {
+    func map(_ transform: (Self) -> AnyHashableObject) -> AnyHashableObject
+}
+
+extension AnyHashableConvertible where Self: ObjectType & Hashable {
+    public func map(_ transform: (Self) -> AnyHashableObject) -> AnyHashableObject {
+        return transform(self)
+    }
+}
+
 public struct HashPair {
-    public let key: ObjectType
+    public let key: AnyHashableObject
     public let value: ObjectType
     
-    public init(key: ObjectType, value: ObjectType) {
+    public init(key: AnyHashableObject, value: ObjectType) {
         self.key = key
         self.value = value
     }
@@ -234,7 +305,7 @@ extension HashObject: ObjectType {
     }
     
     public var description: String {
-        let pairsString = pairs.map { "\($0.key.description): \($0.value.description)" }.joined(separator: ", ")
+        let pairsString = pairs.map { "\($0.key.base.description): \($0.value.description)" }.joined(separator: ", ")
         return "[\(pairsString)]"
     }
 }

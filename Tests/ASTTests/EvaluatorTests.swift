@@ -9,7 +9,7 @@ import XCTest
 import Syntax
 import Lexer
 import Sema
-import AST
+@testable import AST
 
 final class EvaluatorTests: XCTestCase {
     func test_evaluateIntegerExpression() {
@@ -286,13 +286,12 @@ final class EvaluatorTests: XCTestCase {
             (input: "[1, 2, 3][3]", expected: nil),
             (input: "[1, 2, 3][-1]", expected: nil),
         ]
-        
+
         tests.forEach {
             let object = makeObject(from: $0.input)
-            switch object {
-            case is IntegerObject:
-                testIntegerObject(object, expected: Int64($0.expected as! Int))
-            default:
+            if let value = $0.expected as? Int {
+                testIntegerObject(object, expected: Int64(value))
+            } else {
                 testNullObject(object)
             }
         }
@@ -310,54 +309,92 @@ final class EvaluatorTests: XCTestCase {
                 false: 6
             }
         """
-        
+
         let object = makeObject(from: input)
         guard let hash = object as? HashObject else {
             XCTFail("object not \(HashObject.self). got=\(type(of: object))")
             return
         }
-        
+
         let expected: [HashPair] = [
-            .init(key: StringObject(value: "one"), value: IntegerObject(value: 1)),
-            .init(key: StringObject(value: "two"), value: IntegerObject(value: 2)),
-            .init(key: StringObject(value: "three"), value: IntegerObject(value: 3)),
-            .init(key: IntegerObject(value: 4), value: IntegerObject(value: 4)),
-            .init(key: BooleanObject(value: true), value: IntegerObject(value: 5)),
-            .init(key: BooleanObject(value: false), value: IntegerObject(value: 6)),
+            .init(key: .init(StringObject(value: "one")), value: IntegerObject(value: 1)),
+            .init(key: .init(StringObject(value: "two")), value: IntegerObject(value: 2)),
+            .init(key: .init(StringObject(value: "three")), value: IntegerObject(value: 3)),
+            .init(key: .init(IntegerObject(value: 4)), value: IntegerObject(value: 4)),
+            .init(key: .init(BooleanObject(value: true)), value: IntegerObject(value: 5)),
+            .init(key: .init(BooleanObject(value: false)), value: IntegerObject(value: 6)),
         ]
-        
+
         XCTAssertTrue(hash.pairs.count == expected.count, "hash.pairs.count wrong. got=\(hash.pairs.count), want=\(expected.count)")
-        
+
         for (index, pair) in hash.pairs.enumerated() {
             testIntegerObject(pair.value, expected: (expected[index].value as! IntegerObject).value)
         }
     }
+
+    func test_hashIndexExpressions() {
+        let tests: [(input: String, expected: Int64?)] = [
+            (input: """
+                {"foo": 5}["foo"]
+            """, expected: 5),
+            (input: """
+                {"foo": 5}["bar"]
+            """, expected: nil),
+            (input: """
+                let key = "foo"; {"foo": 5}[key]
+            """, expected: 5),
+            (input: """
+                {}["foo"]
+            """, expected: nil),
+            (input: """
+                {5: 5}[5]
+            """, expected: 5),
+            (input: """
+                {true: 5}[true]
+            """, expected: 5),
+            (input: """
+                {false: 5}[false]
+            """, expected: 5),
+        ]
+
+        tests.forEach {
+            let object = makeObject(from: $0.input)
+            if let value = $0.expected {
+                testIntegerObject(object, expected: value)
+            } else {
+                testNullObject(object)
+            }
+        }
+    }
     
     private func testIntegerObject(_ object: ObjectType, expected: Int64) {
-        guard let integer = object as? IntegerObject else {
-            XCTFail("object not \(IntegerObject.self). got=\(type(of: object))")
-            return
-        }
-        
+        let object = object.unwrapHashableObject()
+        switch object {
+        case let integer as IntegerObject:
         XCTAssertTrue(integer.value == expected, "integer.value wrong. want=\(expected), got=\(integer.value)")
+        default:
+            XCTFail("object not \(IntegerObject.self). got=\(type(of: object))")
+        }
     }
     
     private func testBooleanObject(_ object: ObjectType, expected: Bool) {
-        guard let boolean = object as? BooleanObject else {
+        let object = object.unwrapHashableObject()
+        switch object {
+        case let boolean as BooleanObject:
+            XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
+        default:
             XCTFail("object not \(BooleanObject.self). got=\(type(of: object))")
-            return
         }
-        
-        XCTAssertTrue(boolean.value == expected, "boolean.value wrong. want=\(expected), got=\(boolean.value)")
     }
     
     private func testStringObject(_ object: ObjectType, expected: String) {
-        guard let stringObject = object as? StringObject else {
+        let object = object.unwrapHashableObject()
+        switch object {
+        case let stringObject as StringObject:
+            XCTAssertTrue(stringObject.value == expected, "stringObject.value wrong. want=\(expected), got=\(stringObject.value)")
+        default:
             XCTFail("object not \(StringObject.self). got=\(type(of: object))")
-            return
         }
-        
-        XCTAssertTrue(stringObject.value == expected, "stringObject.value wrong. want=\(expected), got=\(stringObject.value)")
     }
     
     private func testNullObject(_ object: ObjectType) {

@@ -17,6 +17,7 @@ public enum EvaluatorError: Error {
     case unsupportedArgument(for: BuiltinIdentifier, argument: ObjectType)
     case unsupportedIndexOperator(index: ObjectType, left: ObjectType)
     case wrongNumberArguments(count: Int)
+    case notHashableIndex(_ index: ObjectType)
 }
 
 extension EvaluatorError: CustomStringConvertible {
@@ -40,6 +41,8 @@ extension EvaluatorError: CustomStringConvertible {
             return "index operator \(index.kind) not supported \(left.kind)"
         case .wrongNumberArguments(let count):
             return "wrong number of arguments. got=\(count)"
+        case .notHashableIndex(let index):
+            return "index: \(index.description) for \(HashObject.self) doesn't not conform to Hashable"
         }
     }
 }
