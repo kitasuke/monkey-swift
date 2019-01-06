@@ -291,6 +291,9 @@ public final class Evaluator {
         case .push?:
             let builtinFunction = MultipleArgumentsBuiltinFunction(builtinFunction: evaluatePush(arguments:))
             return AnyBuiltinFunction(builtinFunction)
+        case .puts?:
+            let builtinFunction = MultipleArgumentsBuiltinFunction(builtinFunction: evaluatePuts(arguments:))
+            return AnyBuiltinFunction(builtinFunction)
         default:
             throw EvaluatorError.unknownNode(identifier)
         }
@@ -349,6 +352,11 @@ public final class Evaluator {
         default:
             throw EvaluatorError.unsupportedArgument(for: .push, argument: arguments[0])
         }
+    }
+    
+    private func evaluatePuts(arguments: [ObjectType]) -> ObjectType {
+        arguments.forEach { print($0.description) }
+        return Null()
     }
     
     private func apply(function object: ObjectType, arguments: [ObjectType]) throws -> ObjectType {

@@ -13,4 +13,5 @@ public enum BuiltinIdentifier: String {
     case last
     case rest
     case push
+    case puts
 }
