@@ -65,6 +65,43 @@ final class ParserTests: XCTestCase {
         }
     }
     
+    func test_ifStatement() {
+        let input = "if (x < y) { x }"
+        
+        let program = makeProgram(from: input)
+        
+        let statementCount = program.statements.count
+        let expectedCount = 1
+        guard statementCount == expectedCount else {
+            XCTFail("program.statements does not contain \(expectedCount) statements. got=\(statementCount)")
+            return
+        }
+        
+        program.statements.forEach { statement in
+            
+            guard let ifStatement = statement as? IfStatement else {
+                XCTFail("statement not \(IfStatement.self). got=\(type(of: statement))")
+                return
+            }
+            
+            testInfixExpression(ifStatement.condition, leftValue: "x", operator: "<", rightValue: "y")
+            
+            guard !ifStatement.consequence.statements.isEmpty else {
+                XCTFail("consequence.statements is empty")
+                return
+            }
+            
+            guard let consequence = ifStatement.consequence.statements[0] as? ExpressionStatement else {
+                XCTFail("consequence.statements[0] not \(ExpressionStatement.self). got=\(type(of: ifStatement.consequence.statements[0]))")
+                return
+            }
+            
+            testIdentifier(expression: consequence.expression, expected: "x")
+            
+            XCTAssertNil(ifStatement.alternative, "alternative should be nil")
+        }
+    }
+    
     func test_identifierExpression() {
         let input = "foobar;"
         
@@ -183,34 +220,6 @@ final class ParserTests: XCTestCase {
             
             testBoolean(expression: statement.expression, expected: $0.expected)
         }
-    }
-    
-    func test_ifExpression() {
-        let input = "if (x < y) { x }"
-        
-        let program = makeProgram(from: input)
-        let statement = makeExpressionStatement(from: program)
-        
-        guard let ifExpression = statement.expression as? IfExpression else {
-            XCTFail("statement.expression not \(IfExpression.self). got=\(type(of: statement.expression))")
-            return
-        }
-        
-        testInfixExpression(ifExpression.condition, leftValue: "x", operator: "<", rightValue: "y")
-        
-        guard !ifExpression.consequence.statements.isEmpty else {
-            XCTFail("consequence.statements is empty")
-            return
-        }
-        
-        guard let consequence = ifExpression.consequence.statements[0] as? ExpressionStatement else {
-            XCTFail("consequence.statements[0] not \(ExpressionStatement.self). got=\(type(of: ifExpression.consequence.statements[0]))")
-            return
-        }
-        
-        testIdentifier(expression: consequence.expression, expected: "x")
-        
-        XCTAssertNil(ifExpression.alternative, "alternative should be nil")
     }
     
     func test_functionLiteralParsing() {

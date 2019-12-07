@@ -25,7 +25,7 @@ public final class Parser {
         self.lexer = lexer
         
         // set initial state
-        setNextToken()
+        consumeToken()
     }
     
     public func parse() throws -> Program {
@@ -37,7 +37,7 @@ public final class Parser {
             }
 
             // move to next token
-            setNextToken()
+            consumeToken()
         }
         
         guard !statements.isEmpty else {
@@ -50,6 +50,7 @@ public final class Parser {
         switch currentToken.type {
         case .let: return try parseLetStatement()
         case .return: return try parseReturnStatement()
+        case .if: return try parseIfStatement()
         case .illegal: throw ParserError.expressionParsingFailed(token: currentToken)
         default: return try parseExpressionStatement()
         }
@@ -60,21 +61,21 @@ public final class Parser {
         let letToken = currentToken
         
         // x
-        try setNextToken(expects: .identifier)
+        try consumeTokenIf(.identifier)
 
         let name = Identifier(token: currentToken)
         
         // =
-        try setNextToken(expects: .assign)
+        try consumeTokenIf(.assign)
         
         // x or 5
-        setNextToken()
+        consumeToken()
         guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
         
         if isPeekToken(equalTo: .semicolon) {
-            setNextToken()
+            consumeToken()
         }
         
         return LetStatement(token: letToken, name: name, value: value)
@@ -85,16 +86,53 @@ public final class Parser {
         let returnToken = currentToken
         
         // x or 5
-        setNextToken()
+        consumeToken()
         guard let value = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
         
         if isPeekToken(equalTo: .semicolon) {
-            setNextToken()
+            consumeToken()
         }
         
         return ReturnStatement(token: returnToken, value: value)
+    }
+    
+    private func parseIfStatement() throws -> IfStatement {
+        // if
+        let ifToken = currentToken
+        
+        // (
+        try consumeTokenIf(.leftParen)
+        consumeToken()
+        
+        // x == y
+        guard let condition = try parseExpression() else {
+            throw ParserError.expressionParsingFailed(token: currentToken)
+        }
+        
+        // )
+        try consumeTokenIf(.rightParen)
+        // {
+        try consumeTokenIf(.leftBrace)
+        
+        // x + y;
+        let consequence = try parseBlockStatement()
+        
+        let alternative: BlockStatement?
+        if isPeekToken(equalTo: .else) {
+            // else
+            consumeToken()
+            // {
+            try consumeTokenIf(.leftBrace)
+            
+            // y + z;
+            alternative = try parseBlockStatement()
+        } else {
+            alternative = nil
+        }
+        
+        return IfStatement(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
     }
     
     private func parseExpressionStatement() throws -> ExpressionStatement? {
@@ -105,7 +143,7 @@ public final class Parser {
         }
         
         if isPeekToken(equalTo: .semicolon) {
-            setNextToken()
+            consumeToken()
         }
         
         return ExpressionStatement(token: expressionToken, expression: expression)
@@ -114,7 +152,7 @@ public final class Parser {
     private func parseBlockStatement() throws -> BlockStatement {
         // x; x = y;...
         let blockToken = currentToken
-        setNextToken()
+        consumeToken()
         
         var statements = [StatementType]()
         while !isCurrentToken(equalTo: .rightBrace) &&
@@ -123,7 +161,7 @@ public final class Parser {
                 statements.append(statement)
             }
             // move to next token
-            setNextToken()
+            consumeToken()
         }
         return BlockStatement(token: blockToken, statements: statements)
     }
@@ -150,7 +188,7 @@ public final class Parser {
     private func parsePrefixExpression() throws -> PrefixExpression {
         // !
         let prefixToken = currentToken
-        setNextToken()
+        consumeToken()
         
         // x
         guard let right = try parseExpression(for: .prefix) else {
@@ -161,7 +199,7 @@ public final class Parser {
     
     private func parseGroupedExpression() throws -> ExpressionType {
         // (
-        setNextToken()
+        consumeToken()
         
         // x
         guard let expression = try parseExpression() else {
@@ -169,46 +207,9 @@ public final class Parser {
         }
         
         // )
-        try setNextToken(expects: .rightParen)
+        try consumeTokenIf(.rightParen)
         
         return expression
-    }
-    
-    private func parseIfExpression() throws -> IfExpression {
-        // if
-        let ifToken = currentToken
-        
-        // (
-        try setNextToken(expects: .leftParen)
-        setNextToken()
-        
-        // x == y
-        guard let condition = try parseExpression() else {
-            throw ParserError.expressionParsingFailed(token: currentToken)
-        }
-        
-        // )
-        try setNextToken(expects: .rightParen)
-        // {
-        try setNextToken(expects: .leftBrace)
-        
-        // x + y;
-        let consequence = try parseBlockStatement()
-        
-        let alternative: BlockStatement?
-        if isPeekToken(equalTo: .else) {
-            // else
-            setNextToken()
-            // {
-            try setNextToken(expects: .leftBrace)
-            
-            // y + z;
-            alternative = try parseBlockStatement()
-        } else {
-            alternative = nil
-        }
-        
-        return IfExpression(token: ifToken, condition: condition, consequence: consequence, alternative: alternative)
     }
     
     private func parseCallExpression(with function: ExpressionType) throws -> CallExpression {
@@ -220,7 +221,7 @@ public final class Parser {
         let indexToken = currentToken
         
         // [
-        setNextToken()
+        consumeToken()
         
         // x
         guard let index = try parseExpression() else {
@@ -228,7 +229,7 @@ public final class Parser {
         }
         
         // ]
-        try setNextToken(expects: .rightBracket)
+        try consumeTokenIf(.rightBracket)
         
         return IndexExpression(token: indexToken, left: left, index: index)
     }
@@ -238,12 +239,12 @@ public final class Parser {
 
         // (
         guard !isPeekToken(equalTo: end) else {
-            setNextToken()
+            consumeToken()
             return list
         }
         
         // x
-        setNextToken()
+        consumeToken()
         
         guard let element = try parseExpression() else {
             throw ParserError.expressionParsingFailed(token: currentToken)
@@ -252,9 +253,9 @@ public final class Parser {
         
         while isPeekToken(equalTo: .comma) {
             // ,
-            setNextToken()
+            consumeToken()
             // y
-            setNextToken()
+            consumeToken()
             
             guard let element = try parseExpression() else {
                 throw ParserError.expressionParsingFailed(token: currentToken)
@@ -262,7 +263,7 @@ public final class Parser {
             list.append(element)
         }
         
-        try setNextToken(expects: end)
+        try consumeTokenIf(end)
         
         return list
     }
@@ -275,7 +276,6 @@ public final class Parser {
         case .true, .false: return parseBoolean()
         case .bang, .minus: return try parsePrefixExpression()
         case .leftParen: return try parseGroupedExpression()
-        case .if: return try parseIfExpression()
         case .function: return try parseFunctionLiteral()
         case .leftBracket: return try parseArrayLiteral()
         case .leftBrace: return try parseDictionaryLiteral()
@@ -289,7 +289,7 @@ public final class Parser {
         
         // y
         let precedence = currentPrecedence
-        setNextToken()
+        consumeToken()
         guard let right = try parseExpression(for: precedence) else {
             throw ParserError.expressionParsingFailed(token: currentToken)
         }
@@ -300,13 +300,13 @@ public final class Parser {
     private func parseInfixOperator(with left: ExpressionType) throws -> ExpressionType? {
         switch peekToken.type {
         case .plus, .minus, .slash, .asterisk, .equal, .notEqual, .lessThan, .greaterThan:
-            setNextToken()
+            consumeToken()
             return try parseInfixExpression(with: left)
         case .leftParen:
-            setNextToken()
+            consumeToken()
             return try parseCallExpression(with: left)
         case .leftBracket:
-            setNextToken()
+            consumeToken()
             return try parseIndexExpression(with: left)
         default: return nil
         }
@@ -320,12 +320,12 @@ public final class Parser {
         let functionToken = currentToken
         
         // fn
-        try setNextToken(expects: .leftParen)
+        try consumeTokenIf(.leftParen)
         
         // (...)
         let parameters = try parseFunctionParameters()
         
-        try setNextToken(expects: .leftBrace)
+        try consumeTokenIf(.leftBrace)
         
         let body = try parseBlockStatement()
         
@@ -337,25 +337,25 @@ public final class Parser {
 
         // (
         guard !isPeekToken(equalTo: .rightParen) else {
-            setNextToken()
+            consumeToken()
             return identifiers
         }
         
         // x
-        setNextToken()
+        consumeToken()
         
         identifiers.append(Identifier(token: currentToken))
         
         while isPeekToken(equalTo: .comma) {
             // ,
-            setNextToken()
+            consumeToken()
             // y
-            setNextToken()
+            consumeToken()
             identifiers.append(Identifier(token: currentToken))
         }
         
         // )
-        try setNextToken(expects: .rightParen)
+        try consumeTokenIf(.rightParen)
         
         return identifiers
     }
@@ -383,7 +383,7 @@ public final class Parser {
         var pairs: [HashLiteral.HashPair] = []
         while !isPeekToken(equalTo: .rightBrace) {
             // {
-            setNextToken()
+            consumeToken()
             
             // foo
             guard let key = try parseExpression() else {
@@ -391,10 +391,10 @@ public final class Parser {
             }
             
             // :
-            try setNextToken(expects: .colon)
+            try consumeTokenIf(.colon)
             
             // bar
-            setNextToken()
+            consumeToken()
             guard let value = try parseExpression() else {
                 throw ParserError.expressionParsingFailed(token: currentToken)
             }
@@ -402,27 +402,27 @@ public final class Parser {
             
             if !isPeekToken(equalTo: .rightBrace) {
                 // ,
-                try setNextToken(expects: .comma)
+                try consumeTokenIf(.comma)
             }
         }
         
         // }
-        try setNextToken(expects: .rightBrace)
+        try consumeTokenIf(.rightBrace)
         
         return HashLiteral(token: dictionaryToken, pairs: pairs)
     }
 
-    private func setNextToken() {
+    private func consumeToken() {
         currentToken = peekToken
         peekToken = lexer.nextToken()
     }
     
-    private func setNextToken(expects tokenType: TokenType) throws {
+    private func consumeTokenIf(_ tokenType: TokenType) throws {
         guard isPeekToken(equalTo: tokenType) else {
             throw ParserError.peekTokenNotMatch(expected: tokenType, actual: peekToken.type)
         }
         
-        setNextToken()
+        consumeToken()
     }
     
     private func isCurrentToken(equalTo tokenType: TokenType) -> Bool {

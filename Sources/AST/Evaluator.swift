@@ -27,6 +27,8 @@ public final class Evaluator {
             let value = try evaluate(node: letStatement.value, with: environment)
             environment.set(value, for: letStatement.name)
             return value
+        case let ifStatement as IfStatement:
+            return try evaluate(ifStatement: ifStatement, with: environment)
         case let prefixExpression as PrefixExpression:
             let right = try evaluate(node: prefixExpression.right, with: environment)
             return try evaluatePrefixExpression(operator: prefixExpression.operator, right: right)
@@ -34,8 +36,6 @@ public final class Evaluator {
             let left = try evaluate(node: infixExpression.left, with: environment)
             let right = try evaluate(node: infixExpression.right, with: environment)
             return try evaluateInfixExpression(operator: infixExpression.operator, left: left, right: right)
-        case let ifExpression as IfExpression:
-            return try evaluate(ifExpression: ifExpression, with: environment)
         case let callExpression as CallExpression:
             let function = try evaluate(node: callExpression.function, with: environment)
             let arguments = try evaluate(expressions: callExpression.arguments, with: environment)
@@ -219,8 +219,8 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(ifExpression: IfExpression, with environment: EnvironmentType) throws -> ObjectType {
-        let condition = (try evaluate(node: ifExpression.condition, with: environment)).unwrapHashableObject()
+    private func evaluate(ifStatement: IfStatement, with environment: EnvironmentType) throws -> ObjectType {
+        let condition = (try evaluate(node: ifStatement.condition, with: environment)).unwrapHashableObject()
         
         let isTruthy: (ObjectType) -> Bool = { object in
             switch object {
@@ -232,8 +232,8 @@ public final class Evaluator {
         }
         
         if isTruthy(condition) {
-            return try evaluate(node: ifExpression.consequence, with: environment)
-        } else if let alternative = ifExpression.alternative {
+            return try evaluate(node: ifStatement.consequence, with: environment)
+        } else if let alternative = ifStatement.alternative {
             return try evaluate(node: alternative, with: environment)
         } else {
             return Null()

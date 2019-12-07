@@ -145,7 +145,7 @@ extension InfixExpression: ExpressionType {
     }
 }
 
-public struct IfExpression {
+public struct IfStatement {
     public let token: Token
     public let condition: ExpressionType
     public let consequence: BlockStatement
@@ -159,7 +159,7 @@ public struct IfExpression {
     }
 }
 
-extension IfExpression: ExpressionType {
+extension IfStatement: StatementType {
     public var description: String {
         var string = "if \(condition.description) \(consequence.description)"
         alternative.flatMap { string = string + "else \($0.description)" }
