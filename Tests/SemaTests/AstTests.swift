@@ -12,7 +12,7 @@ import Sema
 final class AstTests: XCTestCase {
     func test_nextDescription() {
         
-        let programs: [Program] = [
+        let sourceFiles: [SourceFile] = [
             .init(
                 statements: [
                     LetStatement(
@@ -38,7 +38,7 @@ final class AstTests: XCTestCase {
             "let myVar = anotherVar;"
         ]
         
-        for (index, program) in programs.enumerated() {
+        for (index, program) in sourceFiles.enumerated() {
             XCTAssertTrue(program.description == expectedDescriptions[index], "program.description not \(expectedDescriptions[index])")
         }
     }

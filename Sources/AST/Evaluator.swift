@@ -14,8 +14,8 @@ public final class Evaluator {
     
     public func evaluate(node: NodeType, with environment: EnvironmentType) throws -> ObjectType {
         switch node {
-        case let program as Program:
-            return try evaluate(program: program, with: environment)
+        case let sourceFile as SourceFile:
+            return try evaluate(sourceFile: sourceFile, with: environment)
         case let expressionStatement as ExpressionStatement:
             return try evaluate(node: expressionStatement.expression, with: environment)
         case let blockStatement as BlockStatement:
@@ -83,9 +83,9 @@ public final class Evaluator {
         }
     }
     
-    private func evaluate(program: Program, with environment: EnvironmentType) throws -> ObjectType {
+    private func evaluate(sourceFile: SourceFile, with environment: EnvironmentType) throws -> ObjectType {
         var object: ObjectType?
-        for statement in program.statements {
+        for statement in sourceFile.statements {
             object = try evaluate(node: statement, with: environment)
             
             if let returnValue = object as? ReturnValue {
@@ -94,7 +94,7 @@ public final class Evaluator {
         }
         
         guard let result = object else {
-            throw EvaluatorError.noValidExpression(program.statements)
+            throw EvaluatorError.noValidExpression(sourceFile.statements)
         }
         return result
     }

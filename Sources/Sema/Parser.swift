@@ -28,7 +28,7 @@ public final class Parser {
         consumeToken()
     }
     
-    public func parse() throws -> Program {
+    public func parse() throws -> SourceFile {
         var statements: [StatementType] = []
         
         while currentToken.type != .eof {
@@ -43,7 +43,7 @@ public final class Parser {
         guard !statements.isEmpty else {
             throw ParserError.noValidStatements
         }
-        return Program(statements: statements)
+        return SourceFile(statements: statements)
     }
     
     private func parseStatement() throws -> StatementType? {

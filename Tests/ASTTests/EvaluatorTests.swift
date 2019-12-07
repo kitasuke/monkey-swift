@@ -193,7 +193,7 @@ final class EvaluatorTests: XCTestCase {
         ]
         
         tests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             do {
                 let environment = Environment()
                 let evaluator = Evaluator()
@@ -401,27 +401,27 @@ final class EvaluatorTests: XCTestCase {
         XCTAssertTrue(object.kind == .null, "")
     }
     
-    private func makeProgram(from input: String) -> Program {
+    private func makeSourceFile(from input: String) -> SourceFile {
         let lexer = Lexer(input: input)
         let parser = Parser(lexer: lexer)
         
-        let program: Program
+        let sourceFile: SourceFile
         do {
-            program = try parser.parse()
+            sourceFile = try parser.parse()
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {
             XCTFail("unknown error"); fatalError()
         }
-        return program
+        return sourceFile
     }
     
-    private func makeObject(from program: Program) -> ObjectType {
+    private func makeObject(from sourceFile: SourceFile) -> ObjectType {
         let object: ObjectType
         do {
             let environment = Environment()
             let evaluator = Evaluator()
-            object = try evaluator.evaluate(node: program, with: environment)
+            object = try evaluator.evaluate(node: sourceFile, with: environment)
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {
@@ -431,8 +431,8 @@ final class EvaluatorTests: XCTestCase {
     }
     
     private func makeObject(from input: String) -> ObjectType {
-        let program = makeProgram(from: input)
-        let object = makeObject(from: program)
+        let sourceFile = makeSourceFile(from: input)
+        let object = makeObject(from: sourceFile)
         return object
     }
 }

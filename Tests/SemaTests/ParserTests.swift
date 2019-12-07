@@ -18,7 +18,7 @@ final class ParserTests: XCTestCase {
             let foobar = 838383;
         """
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         
         let statementsCount = program.statements.count
         let expectedCount = 3
@@ -46,7 +46,7 @@ final class ParserTests: XCTestCase {
             return 993322;
         """
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         
         let statementsCount = program.statements.count
         let expectedCount = 3
@@ -68,7 +68,7 @@ final class ParserTests: XCTestCase {
     func test_ifStatement() {
         let input = "if (x < y) { x }"
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         
         let statementCount = program.statements.count
         let expectedCount = 1
@@ -105,7 +105,7 @@ final class ParserTests: XCTestCase {
     func test_identifierExpression() {
         let input = "foobar;"
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         testIdentifier(expression: statement.expression, expected: "foobar")
@@ -118,7 +118,7 @@ final class ParserTests: XCTestCase {
         ]
         
         prefixTests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             let statement = makeExpressionStatement(from: program)
             
             guard let expression = statement.expression as? PrefixExpression else {
@@ -147,7 +147,7 @@ final class ParserTests: XCTestCase {
         ]
         
         infixTests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             let statement = makeExpressionStatement(from: program)
             
             testInfixExpression(statement.expression, leftValue: $0.leftValue, operator: $0.operator, rightValue: $0.rightValue)
@@ -182,7 +182,7 @@ final class ParserTests: XCTestCase {
         ]
         
         precedenceTests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             
             XCTAssertTrue(program.description == $0.expected, "program.description not \($0.expected). got=\(program.description)")
         }
@@ -191,7 +191,7 @@ final class ParserTests: XCTestCase {
     func test_callExpressionParsing() {
         let input = "add(1, 2 * 3, 4 + 5)"
 
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
 
         guard let callExpression = statement.expression as? CallExpression else {
@@ -215,7 +215,7 @@ final class ParserTests: XCTestCase {
         ]
         
         boolTests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             let statement = makeExpressionStatement(from: program)
             
             testBoolean(expression: statement.expression, expected: $0.expected)
@@ -225,7 +225,7 @@ final class ParserTests: XCTestCase {
     func test_functionLiteralParsing() {
         let input = "fn(x, y) { x + y; }"
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let functionLiteral = statement.expression as? FunctionLiteral else {
@@ -254,7 +254,7 @@ final class ParserTests: XCTestCase {
         ]
         
         tests.forEach {
-            let program = makeProgram(from: $0.input)
+            let program = makeSourceFile(from: $0.input)
             let statement = makeExpressionStatement(from: program)
             
             guard let functionLiteral = statement.expression as? FunctionLiteral else {
@@ -272,7 +272,7 @@ final class ParserTests: XCTestCase {
     
     func test_stringLiteralExpression() {
         let input = "\"hello world\";"
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         testStringLiteral(expression: statement.expression, expected: "hello world")
@@ -280,7 +280,7 @@ final class ParserTests: XCTestCase {
     
     func test_arrayLiteralExpression() {
         let input = "[1, 2 * 2, 3 + 3]"
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let arrayLiteral = statement.expression as? ArrayLiteral else {
@@ -297,7 +297,7 @@ final class ParserTests: XCTestCase {
     func test_parsingIndexExpression() {
         let input = "myArray[1 + 1]"
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let indexExpression = statement.expression as? IndexExpression else {
@@ -314,7 +314,7 @@ final class ParserTests: XCTestCase {
             {"one": 1, "two": 2, "three": 3}
         """
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let dictionary = statement.expression as? HashLiteral else {
@@ -339,7 +339,7 @@ final class ParserTests: XCTestCase {
     func test_parsingEmptyDictionaryLiteral() {
         let input = "{}"
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let dictionary = statement.expression as? HashLiteral else {
@@ -354,7 +354,7 @@ final class ParserTests: XCTestCase {
             {"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}
         """
         
-        let program = makeProgram(from: input)
+        let program = makeSourceFile(from: input)
         let statement = makeExpressionStatement(from: program)
         
         guard let dictionary = statement.expression as? HashLiteral else {
@@ -459,29 +459,29 @@ final class ParserTests: XCTestCase {
         XCTAssertTrue(infixExpression.operator == `operator`, "infixExpression.operator not \(`operator`). got=\(infixExpression.operator)")
     }
     
-    private func makeProgram(from input: String) -> Program {
+    private func makeSourceFile(from input: String) -> SourceFile {
         let lexer = Lexer(input: input)
         let parser = Parser(lexer: lexer)
         
-        let program: Program
+        let sourceFile: SourceFile
         do {
-            program = try parser.parse()
+            sourceFile = try parser.parse()
         } catch let error as Error & CustomStringConvertible {
             XCTFail(error.description); fatalError()
         } catch {
             XCTFail("unexpected error"); fatalError()
         }
-        return program
+        return sourceFile
     }
     
-    private func makeExpressionStatement(from program: Program) -> ExpressionStatement {
-        guard !program.statements.isEmpty else {
+    private func makeExpressionStatement(from sourceFile: SourceFile) -> ExpressionStatement {
+        guard !sourceFile.statements.isEmpty else {
             XCTFail("program.statements is empty")
             fatalError()
         }
         
-        guard let statement = program.statements[0] as? ExpressionStatement else {
-            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: program.statements[0]))")
+        guard let statement = sourceFile.statements[0] as? ExpressionStatement else {
+            XCTFail("program.statements[0] not \(ExpressionStatement.self). got=\(type(of: sourceFile.statements[0]))")
             fatalError()
         }
         

@@ -21,7 +21,7 @@ extension NodeType {
 public protocol StatementType: NodeType {}
 public protocol ExpressionType: StatementType {}
 
-public struct Program: NodeType {
+public struct SourceFile: NodeType {
     public let token: Token
     public let statements: [StatementType]
     
@@ -31,7 +31,7 @@ public struct Program: NodeType {
     }
 }
 
-extension Program {
+extension SourceFile {
     public var description: String {
         return statements.reduce("") { result, statement in
             result + statement.description
