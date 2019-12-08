@@ -7,7 +7,6 @@
 
 import Foundation
 import Syntax
-import Lexer
 
 public final class Parser {
     private var lexer: Lexer

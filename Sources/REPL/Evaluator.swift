@@ -6,7 +6,7 @@
 //
 
 import Syntax
-import Sema
+import AST
 
 public final class Evaluator {
     

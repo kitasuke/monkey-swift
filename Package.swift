@@ -14,33 +14,27 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "monkey-swift",
-            dependencies: ["Syntax", "Lexer", "Sema", "AST", "REPL"]),
+            dependencies: ["REPL"]),
         .target(
             name: "Syntax",
             dependencies: []),
         .target(
-            name: "Lexer",
+            name: "AST",
             dependencies: ["Syntax"]),
         .target(
-            name: "Sema",
-            dependencies: ["Syntax", "Lexer"]),
-        .target(
-            name: "AST",
-            dependencies: ["Syntax", "Lexer", "Sema"]),
-        .target(
             name: "REPL",
-            dependencies: ["Syntax", "Lexer", "Sema", "AST"]),
+            dependencies: ["AST"]),
         .testTarget(
             name: "monkey-swiftTests",
             dependencies: ["monkey-swift"]),
         .testTarget(
-            name: "LexerTests",
-            dependencies: ["Syntax", "Lexer"]),
-        .testTarget(
-            name: "SemaTests",
-            dependencies: ["Syntax", "Lexer", "Sema"]),
+            name: "SyntaxTests",
+            dependencies: ["Syntax"]),
         .testTarget(
             name: "ASTTests",
-            dependencies: ["Syntax", "Lexer", "Sema", "AST"]),
+            dependencies: ["AST"]),
+        .testTarget(
+            name: "REPLTests",
+            dependencies: ["AST"]),
     ]
 )

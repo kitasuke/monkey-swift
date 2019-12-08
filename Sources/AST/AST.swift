@@ -91,6 +91,28 @@ extension ReturnStatement: StatementType {
     }
 }
 
+public struct IfStatement {
+    public let token: Token
+    public let condition: ExpressionType
+    public let consequence: BlockStatement
+    public let alternative: BlockStatement?
+    
+    public init(token: Token, condition: ExpressionType, consequence: BlockStatement, alternative: BlockStatement?) {
+        self.token = token
+        self.condition = condition
+        self.consequence = consequence
+        self.alternative = alternative
+    }
+}
+
+extension IfStatement: StatementType {
+    public var description: String {
+        var string = "if \(condition.description) \(consequence.description)"
+        alternative.flatMap { string = string + "else \($0.description)" }
+        return string
+    }
+}
+
 public struct ExpressionStatement {
     public let token: Token
     public let expression: ExpressionType
@@ -142,28 +164,6 @@ public struct InfixExpression {
 extension InfixExpression: ExpressionType {
     public var description: String {
         return "(\(left.description) \(`operator`) \(right.description))"
-    }
-}
-
-public struct IfStatement {
-    public let token: Token
-    public let condition: ExpressionType
-    public let consequence: BlockStatement
-    public let alternative: BlockStatement?
-    
-    public init(token: Token, condition: ExpressionType, consequence: BlockStatement, alternative: BlockStatement?) {
-        self.token = token
-        self.condition = condition
-        self.consequence = consequence
-        self.alternative = alternative
-    }
-}
-
-extension IfStatement: StatementType {
-    public var description: String {
-        var string = "if \(condition.description) \(consequence.description)"
-        alternative.flatMap { string = string + "else \($0.description)" }
-        return string
     }
 }
 

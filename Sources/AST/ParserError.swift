@@ -7,7 +7,6 @@
 
 import Foundation
 import Syntax
-import Lexer
 
 public enum ParserError: Error, CustomStringConvertible {
     case noValidStatements

@@ -7,7 +7,7 @@
 
 import XCTest
 import Syntax
-import Sema
+import AST
 
 final class AstTests: XCTestCase {
     func test_nextDescription() {

@@ -7,9 +7,8 @@
 
 import XCTest
 import Syntax
-import Lexer
-import Sema
-@testable import AST
+import AST
+@testable import REPL
 
 final class EvaluatorTests: XCTestCase {
     func test_evaluateIntegerExpression() {

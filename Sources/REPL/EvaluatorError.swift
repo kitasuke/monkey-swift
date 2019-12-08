@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Sema
+import AST
 
 public enum EvaluatorError: Error {
     case unknownNode(NodeType)

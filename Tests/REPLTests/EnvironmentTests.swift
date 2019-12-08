@@ -7,9 +7,8 @@
 
 import XCTest
 import Syntax
-import Lexer
-import Sema
 import AST
+@testable import REPL
 
 final class EnvironmentTests: XCTestCase {
     func test_getObject() {

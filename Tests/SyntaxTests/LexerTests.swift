@@ -6,8 +6,7 @@
 //
 
 import XCTest
-import Syntax
-import Lexer
+@testable import Syntax
 
 final class LexerTests: XCTestCase {
     func test_nextToken() {

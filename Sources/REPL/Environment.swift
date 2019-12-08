@@ -5,7 +5,7 @@
 //  Created by Yusuke Kita on 12/04/18.
 //
 
-import Sema
+import AST
 
 public protocol EnvironmentType {
     var outer: EnvironmentType? { get }

@@ -6,8 +6,6 @@
 //
 
 import Syntax
-import Lexer
-import Sema
 import AST
 
 public struct REPL {

@@ -7,8 +7,7 @@
 
 import XCTest
 import Syntax
-import Lexer
-import Sema
+import AST
 
 final class ParserTests: XCTestCase {
     func test_letStatement() {
